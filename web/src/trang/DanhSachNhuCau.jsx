@@ -1,38 +1,52 @@
 import { Link } from 'react-router-dom'
 import { api } from '../api'
-import { DangTai, ThongBao, TrangThai, useNguoiDung, useTai } from '../chung'
+import { DangTai, DauTrang, ThongBao, TrangThai, Trong, useNguoiDung, useTai } from '../chung'
+import { GIAI_THICH_NHU_CAU } from '../tienIch'
 
 // M06 Danh sách nhu cầu của tổ chức.
 export default function DanhSachNhuCau() {
-  const { nguoiDung } = useNguoiDung()
+  const { laDaiDien } = useNguoiDung()
   const ds = useTai(() => api.get('/api/nhu-cau'), [])
-  const laDaiDien = nguoiDung?.vaiTro.includes('DAI_DIEN')
 
   if (ds.dangTai) return <DangTai />
   if (ds.loi) return <ThongBao loi={ds.loi} />
   return (
     <>
-      <div className="tieu-de-hang">
-        <h1>Nhu cầu của tổ chức</h1>
-        {laDaiDien && <Link className="nut" to="/nhu-cau/moi">Tạo nhu cầu</Link>}
-      </div>
-      {ds.duLieu.length === 0 ? <p className="mo">Tổ chức chưa có nhu cầu nào.</p> : (
-        <table>
-          <thead><tr><th>Tiêu đề</th><th>Tổ chức</th><th>Khu vực</th><th>Trạng thái</th><th>Rà soát</th><th>Số ca</th><th></th></tr></thead>
-          <tbody>
-            {ds.duLieu.map((n) => (
-              <tr key={n.maNhuCau}>
-                <td><Link to={'/nhu-cau/' + n.maNhuCau}>{n.tieuDe}</Link></td>
-                <td>{n.tenToChuc}</td>
-                <td>{n.khuVucChung}</td>
-                <td><TrangThai ma={n.trangThai} /></td>
-                <td>{n.daRaSoatCongKhai ? `Đã rà soát (phiên bản ${n.phienBanCongKhai})` : `Chưa rà soát (phiên bản ${n.phienBanCongKhai})`}</td>
-                <td>{n.soCa}</td>
-                <td>{n.trangThai === 'CONG_BO' && <Link to={`/nhu-cau/${n.maNhuCau}/ca`}>Ca làm</Link>}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <DauTrang tieuDe="Nhu cầu của tổ chức"
+        moTa="Nhu cầu là một việc tổ chức cần người hỗ trợ. Đại diện tạo và công bố nhu cầu, sau đó điều phối viên chia thành các ca làm.">
+        {laDaiDien && <Link className="nut" to="/nhu-cau/moi">Tạo nhu cầu mới</Link>}
+      </DauTrang>
+      {ds.duLieu.length === 0 ? (
+        <Trong>
+          <p>Tổ chức chưa có nhu cầu nào.</p>
+          {laDaiDien
+            ? <div className="hang-nut"><Link className="nut" to="/nhu-cau/moi">Tạo nhu cầu đầu tiên</Link></div>
+            : <p>Đại diện của tổ chức là người tạo nhu cầu. Khi có nhu cầu đã công bố, bạn sẽ tạo ca tại đây.</p>}
+        </Trong>
+      ) : (
+        <ul className="ds-dong">
+          {ds.duLieu.map((n) => (
+            <li key={n.maNhuCau}>
+              <div className="than">
+                <p><strong>{n.tieuDe}</strong></p>
+                <p className="mo">{n.tenToChuc} · {n.khuVucChung}</p>
+                <p><TrangThai ma={n.trangThai} /> <span className="mo">{GIAI_THICH_NHU_CAU[n.trangThai]}</span></p>
+                {n.trangThai !== 'NHAP' && (
+                  <p>
+                    {n.soCa === 0 ? 'Chưa có ca làm' : n.soCaChuaXong === 0 ? `${n.soCa} ca làm, tất cả đã xong` : `${n.soCa} ca làm, ${n.soCaChuaXong} ca chưa xong`}
+                    {n.soChoDuyet > 0 && <span className="thieu-ky-nang"> · {n.soChoDuyet} đăng ký chờ duyệt</span>}
+                  </p>
+                )}
+              </div>
+              <div className="hang-nut">
+                {n.trangThai === 'NHAP' && laDaiDien && <Link className="nut" to={'/nhu-cau/' + n.maNhuCau}>Rà soát và công bố</Link>}
+                {n.trangThai === 'NHAP' && !laDaiDien && <Link className="nut phu" to={'/nhu-cau/' + n.maNhuCau}>Xem nội dung</Link>}
+                {n.trangThai !== 'NHAP' && <Link className="nut" to={`/nhu-cau/${n.maNhuCau}/ca`}>Ca làm</Link>}
+                {n.trangThai !== 'NHAP' && <Link className="nut phu" to={'/nhu-cau/' + n.maNhuCau}>Nội dung nhu cầu</Link>}
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </>
   )
