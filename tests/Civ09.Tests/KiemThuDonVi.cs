@@ -37,7 +37,7 @@ public class KiemThuDonVi
     {
         // Đại diện rà soát phiên bản 1, sau đó nội dung bị sửa thành phiên bản 2.
         var nc = NhuCauCongDong.Tao("TC-A", "Tiêu đề", "Tóm tắt", "Khu vực");
-        nc.CapNhatCongKhai("Tiêu đề đã sửa", "Tóm tắt", "Khu vực");
+        nc.CapNhatCongKhai("Tiêu đề đã sửa", "Tóm tắt", "Khu vực", daCoCa: false);
         Assert.Equal(2, nc.PhienBanCongKhai);
         Assert.Throws<LoiNghiepVu>(() => nc.CongBo(1));
         Assert.Equal(NhuCauCongDong.NHAP, nc.TrangThai);

@@ -406,6 +406,202 @@ public class KiemThuTichHop
         await _may.ChaySqlUngDungAsync("UPDATE dbo.CaLam SET SoNguoiCan = 3 WHERE MaCaLam = @ca", ("@ca", ca));
     }
 
+    [Fact(DisplayName = "KT25 - Sửa ca: chưa có người được phân công thì sửa được; đã có thì không đổi được giờ, kỹ năng và không giảm dưới số đã phân công")]
+    public async Task KT25_SuaCa_TheoDieuKien()
+    {
+        var d = NgayRieng();
+        var ca = await _kb.TaoNhuCauVaCaAsync(d.AddHours(1), d.AddHours(3), soNguoiCan: 2);
+        var dp = _kb.Khach("dieuphoi1");
+
+        // Chưa ai được phân công: đổi giờ, số người và kỹ năng đều được.
+        await Dat(await dp.PutAsJsonAsync($"/api/ca/{ca}", new
+        {
+            batDauDuKien = d.AddHours(2), ketThucDuKien = d.AddHours(4), soNguoiCan = 3, kyNang = new[] { "KN-TIN-HOC", "KN-SO-CUU" }
+        }), HttpStatusCode.NoContent);
+        using (var scope = _may.Services.CreateScope())
+        {
+            var kho = scope.ServiceProvider.GetRequiredService<KhoNghiepVu>();
+            var c = await kho.CaLam.Include(x => x.YeuCauKyNang).FirstAsync(x => x.MaCaLam == ca);
+            Assert.Equal(d.AddHours(2), c.BatDauDuKien);
+            Assert.Equal(3, c.SoNguoiCan);
+            Assert.Equal(2, c.YeuCauKyNang.Count);
+        }
+
+        // tnv1 có đủ hai kỹ năng nên được phân công. Từ đây giờ và kỹ năng của ca bị khóa.
+        await _kb.DangKyVaPhanCongAsync("tnv1", ca);
+        await Dat(await dp.PutAsJsonAsync($"/api/ca/{ca}", new
+        {
+            batDauDuKien = d.AddHours(1), ketThucDuKien = d.AddHours(4), soNguoiCan = 3, kyNang = new[] { "KN-TIN-HOC", "KN-SO-CUU" }
+        }), HttpStatusCode.Conflict);
+        await Dat(await dp.PutAsJsonAsync($"/api/ca/{ca}", new
+        {
+            batDauDuKien = d.AddHours(2), ketThucDuKien = d.AddHours(4), soNguoiCan = 3, kyNang = new[] { "KN-TIN-HOC" }
+        }), HttpStatusCode.Conflict);
+        await Dat(await dp.PutAsJsonAsync($"/api/ca/{ca}", new
+        {
+            batDauDuKien = d.AddHours(2), ketThucDuKien = d.AddHours(4), soNguoiCan = 0, kyNang = new[] { "KN-TIN-HOC", "KN-SO-CUU" }
+        }), HttpStatusCode.BadRequest);
+        // Chỉ đổi số người cần (không thấp hơn số đã phân công) thì được.
+        await Dat(await dp.PutAsJsonAsync($"/api/ca/{ca}", new
+        {
+            batDauDuKien = d.AddHours(2), ketThucDuKien = d.AddHours(4), soNguoiCan = 1, kyNang = new[] { "KN-TIN-HOC", "KN-SO-CUU" }
+        }), HttpStatusCode.NoContent);
+        // Điều phối viên tổ chức khác không được sửa.
+        await Dat(await _kb.Khach("dieuphoi2").PutAsJsonAsync($"/api/ca/{ca}", new
+        {
+            batDauDuKien = d.AddHours(2), ketThucDuKien = d.AddHours(4), soNguoiCan = 2, kyNang = new[] { "KN-TIN-HOC", "KN-SO-CUU" }
+        }), HttpStatusCode.Forbidden);
+    }
+
+    [Fact(DisplayName = "KT26 - Hủy phân công trước giờ bắt đầu thì chỗ được trả lại cho ca; sau giờ bắt đầu thì bị từ chối")]
+    public async Task KT26_HuyPhanCong_TraLaiCho()
+    {
+        var d = NgayRieng();
+        var ca = await _kb.TaoNhuCauVaCaAsync(d.AddHours(1), d.AddHours(3), soNguoiCan: 1);
+        var dk1 = await _kb.DangKyVaPhanCongAsync("tnv1", ca);
+        var dk3 = await _kb.DangKy("tnv3", ca);
+        var dp = _kb.Khach("dieuphoi1");
+
+        // Ca đã đủ người nên chưa phân công thêm được.
+        await Dat(await _kb.GuiPhanCongAsync(dk3), HttpStatusCode.Conflict);
+        // Đăng ký chờ duyệt không phải đối tượng của hủy phân công.
+        await Dat(await dp.PostAsync($"/api/dang-ky/{dk3}/huy-phan-cong", null), HttpStatusCode.Conflict);
+
+        await Dat(await dp.PostAsync($"/api/dang-ky/{dk1}/huy-phan-cong", null), HttpStatusCode.NoContent);
+        Assert.Equal(DangKyCaLam.DA_HUY, await TrangThaiDangKyAsync(dk1));
+        await Dat(await _kb.GuiPhanCongAsync(dk3), HttpStatusCode.NoContent);
+
+        // Đến giờ bắt đầu thì không hủy phân công được nữa.
+        _kb.DatGio(d.AddHours(1));
+        await Dat(await dp.PostAsync($"/api/dang-ky/{dk3}/huy-phan-cong", null), HttpStatusCode.Conflict);
+        Assert.Equal(DangKyCaLam.DA_PHAN_CONG, await TrangThaiDangKyAsync(dk3));
+    }
+
+    [Fact(DisplayName = "KT27 - Sửa nội dung công khai của nhu cầu đã công bố: chưa có ca thì về bản nháp, đã có ca thì bị từ chối")]
+    public async Task KT27_SuaNhuCauDaCongBo()
+    {
+        var d = NgayRieng();
+        var dd = _kb.Khach("daidien1");
+        var nc = await _kb.TaoNhuCauCongBoAsync("Phát quà trung thu", "Điểm phát: sân nhà văn hóa");
+
+        await Dat(await dd.PutAsJsonAsync($"/api/nhu-cau/{nc}", new
+        {
+            tieuDe = "Phát quà trung thu cho thiếu nhi", tomTatCongKhai = "Chia quà và tổ chức trò chơi", khuVucChung = "Phường An Bình"
+        }), HttpStatusCode.NoContent);
+        var sau = await dd.GetFromJsonAsync<JsonElement>($"/api/nhu-cau/{nc}");
+        Assert.Equal("NHAP", sau.GetProperty("trangThai").GetString());
+        Assert.Equal(2, sau.GetProperty("phienBanCongKhai").GetInt32());
+        Assert.False(sau.GetProperty("daRaSoatCongKhai").GetBoolean());
+
+        // Công bố lại rồi tạo ca: từ đây phần công khai không sửa được, hướng dẫn riêng vẫn sửa được.
+        await Dat(await dd.PostAsJsonAsync($"/api/nhu-cau/{nc}/cong-bo", new { phienBan = 2 }), HttpStatusCode.NoContent);
+        await _kb.TaoCa(nc, d.AddHours(1), d.AddHours(3));
+        await Dat(await dd.PutAsJsonAsync($"/api/nhu-cau/{nc}", new
+        {
+            tieuDe = "Tiêu đề khác", tomTatCongKhai = "Chia quà và tổ chức trò chơi", khuVucChung = "Phường An Bình"
+        }), HttpStatusCode.Conflict);
+        await Dat(await dd.PutAsJsonAsync($"/api/nhu-cau/{nc}", new
+        {
+            tieuDe = "Phát quà trung thu cho thiếu nhi", tomTatCongKhai = "Chia quà và tổ chức trò chơi", khuVucChung = "Phường An Bình",
+            huongDanRieng = "Điểm phát: sân nhà văn hóa, cổng sau"
+        }), HttpStatusCode.NoContent);
+        sau = await dd.GetFromJsonAsync<JsonElement>($"/api/nhu-cau/{nc}");
+        Assert.Equal("CONG_BO", sau.GetProperty("trangThai").GetString());
+        Assert.Contains("cổng sau", sau.GetProperty("huongDanRieng").GetString());
+    }
+
+    [Fact(DisplayName = "KT28 - Đóng nhu cầu: chưa có ca hoặc còn ca đang mở thì bị từ chối; mọi ca đã xong thì đóng được và không tạo thêm ca")]
+    public async Task KT28_DongNhuCau()
+    {
+        var d = NgayRieng();
+        var dd = _kb.Khach("daidien1");
+        var nc = await _kb.TaoNhuCauCongBoAsync("Sửa bàn ghế lớp học tình thương", "Liên hệ thầy phụ trách khi đến");
+        await Dat(await dd.PostAsync($"/api/nhu-cau/{nc}/dong", null), HttpStatusCode.Conflict);
+
+        var ca = await _kb.TaoCa(nc, d.AddHours(1), d.AddHours(3));
+        await Dat(await dd.PostAsync($"/api/nhu-cau/{nc}/dong", null), HttpStatusCode.Conflict);
+        // Điều phối viên không phải người đóng nhu cầu.
+        await Dat(await _kb.Khach("dieuphoi1").PostAsync($"/api/nhu-cau/{nc}/dong", null), HttpStatusCode.Forbidden);
+
+        _kb.DatGio(d.AddHours(3).AddMinutes(1));
+        using (var scope = _may.Services.CreateScope())
+        {
+            var dv = scope.ServiceProvider.GetRequiredService<CaService>();
+            await dv.ChuyenMocThoiGian();
+        }
+        await Dat(await dd.PostAsync($"/api/nhu-cau/{nc}/dong", null), HttpStatusCode.NoContent);
+        var sau = await dd.GetFromJsonAsync<JsonElement>($"/api/nhu-cau/{nc}");
+        Assert.Equal("DONG", sau.GetProperty("trangThai").GetString());
+
+        var r = await _kb.Khach("dieuphoi1").PostAsJsonAsync($"/api/nhu-cau/{nc}/ca", new
+        {
+            batDauDuKien = d.AddDays(1), ketThucDuKien = d.AddDays(1).AddHours(2), soNguoiCan = 1, kyNang = new[] { "KN-TIN-HOC" }
+        });
+        await Dat(r, HttpStatusCode.Conflict);
+        Assert.NotNull(ca);
+    }
+
+    [Fact(DisplayName = "KT29 - Hủy nhu cầu khi chưa có ca nào bắt đầu: ca và đăng ký còn hiệu lực bị hủy theo; đã có ca bắt đầu thì bị từ chối")]
+    public async Task KT29_HuyNhuCau()
+    {
+        var d = NgayRieng();
+        var dd = _kb.Khach("daidien1");
+        var nc = await _kb.TaoNhuCauCongBoAsync("Trồng cây ven kênh", "Nhận cây giống tại trụ sở khu phố");
+        var ca = await _kb.TaoCa(nc, d.AddHours(1), d.AddHours(3));
+        var dkPhanCong = await _kb.DangKyVaPhanCongAsync("tnv1", ca);
+        var dkCho = await _kb.DangKy("tnv3", ca);
+
+        await Dat(await dd.PostAsync($"/api/nhu-cau/{nc}/huy", null), HttpStatusCode.NoContent);
+        using (var scope = _may.Services.CreateScope())
+        {
+            var kho = scope.ServiceProvider.GetRequiredService<KhoNghiepVu>();
+            Assert.Equal(NhuCauCongDong.DA_HUY, await kho.NhuCauCongDong.Where(n => n.MaNhuCau == nc).Select(n => n.TrangThai).FirstAsync());
+            Assert.Equal(CaLam.DA_HUY, await kho.CaLam.Where(c => c.MaCaLam == ca).Select(c => c.TrangThai).FirstAsync());
+        }
+        Assert.Equal(DangKyCaLam.DA_HUY, await TrangThaiDangKyAsync(dkPhanCong));
+        Assert.Equal(DangKyCaLam.DA_HUY, await TrangThaiDangKyAsync(dkCho));
+        // Ca đã hủy không còn trong kết quả tìm ca công khai.
+        await Dat(await _kb.Khach().GetAsync($"/api/ca/{ca}"), HttpStatusCode.NotFound);
+
+        // Nhu cầu đã có ca bắt đầu thì không hủy được.
+        var d2 = NgayRieng();
+        _kb.DatGio(DongHoGia.MocGoc.UtcDateTime);
+        var nc2 = await _kb.TaoNhuCauCongBoAsync("Trồng cây ven kênh đợt hai", "Nhận cây giống tại trụ sở khu phố");
+        await _kb.TaoCa(nc2, d2.AddHours(1), d2.AddHours(3));
+        _kb.DatGio(d2.AddHours(1).AddMinutes(5));
+        await Dat(await dd.PostAsync($"/api/nhu-cau/{nc2}/huy", null), HttpStatusCode.Conflict);
+    }
+
+    [Fact(DisplayName = "KT30 - Người mới tự đăng ký: lần đăng nhập đầu tiên được lập tài khoản tình nguyện viên và một hồ sơ, không lập trùng")]
+    public async Task KT30_NguoiMoi_DuocLapTaiKhoanTinhNguyenVien()
+    {
+        var sub = Guid.NewGuid().ToString();
+        using (var scope = _may.Services.CreateScope())
+        {
+            var dv = scope.ServiceProvider.GetRequiredService<AuthService>();
+            Assert.True(await dv.XuLyCallback(sub, "Lý Thu Trang"));
+        }
+        using (var scope = _may.Services.CreateScope())
+        {
+            // Đăng nhập lần sau dùng lại tài khoản đã có.
+            var dv = scope.ServiceProvider.GetRequiredService<AuthService>();
+            Assert.True(await dv.XuLyCallback(sub, "Tên khác"));
+            var kho = scope.ServiceProvider.GetRequiredService<KhoNghiepVu>();
+            var nd = await kho.NguoiDung.Include(x => x.VaiTro).SingleAsync(x => x.MaDinhDanhOIDC == sub);
+            Assert.Equal("Lý Thu Trang", nd.TenHienThi);
+            Assert.Equal(new[] { CacVaiTro.TinhNguyenVien }, nd.VaiTro.Select(v => v.VaiTro).ToArray());
+            Assert.Equal(1, await kho.HoSoTinhNguyenVien.CountAsync(h => h.MaNguoiDung == nd.MaNguoiDung));
+        }
+
+        // Người mới dùng được chức năng của tình nguyện viên, không có quyền của đại diện hay điều phối viên.
+        var khach = _kb.Khach();
+        khach.DefaultRequestHeaders.Add(XacThucKiemThu.TieuDe, sub);
+        var toi = await khach.GetFromJsonAsync<JsonElement>("/api/auth/toi");
+        Assert.True(toi.GetProperty("laTinhNguyenVien").GetBoolean());
+        await Dat(await khach.GetAsync("/api/dang-ky/cua-toi"), HttpStatusCode.OK);
+        await Dat(await khach.GetAsync("/api/nhu-cau"), HttpStatusCode.Forbidden);
+    }
+
     [Fact(DisplayName = "BR02 - Gọi chức năng cần đăng nhập khi chưa đăng nhập thì nhận mã 401")]
     public async Task BR02_ChuaDangNhap_Nhan401()
         => await Dat(await _kb.Khach().GetAsync("/api/dang-ky/cua-toi"), HttpStatusCode.Unauthorized);
