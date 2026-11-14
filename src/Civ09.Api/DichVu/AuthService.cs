@@ -1,5 +1,6 @@
 using Civ09.Api.DuLieu;
 using Civ09.Api.ThucThe;
+using Microsoft.EntityFrameworkCore;
 
 namespace Civ09.Api.DichVu;
 
@@ -7,14 +8,34 @@ namespace Civ09.Api.DichVu;
 public class AuthService
 {
     private readonly KhoNghiepVu _kho;
+    private readonly TimeProvider _thoiGian;
 
-    public AuthService(KhoNghiepVu kho) => _kho = kho;
+    public AuthService(KhoNghiepVu kho, TimeProvider thoiGian)
+    {
+        _kho = kho; _thoiGian = thoiGian;
+    }
 
-    // Chỉ mở phiên khi danh tính đã gắn với một tài khoản còn hoạt động.
-    public async Task<bool> XuLyCallback(string? sub)
+    // Chỉ mở phiên khi danh tính gắn với một tài khoản còn hoạt động. Danh tính chưa có tài khoản là của
+    // người vừa tự đăng ký ở Keycloak: lập cho họ tài khoản tình nguyện viên kèm một hồ sơ.
+    public async Task<bool> XuLyCallback(string? sub, string? tenHienThi = null)
     {
         if (string.IsNullOrEmpty(sub)) return false;
         var nd = await NguoiDung.TimTheoDanhTinh(_kho, sub);
-        return nd is { DangHoatDong: true };
+        if (nd != null) return nd.DangHoatDong;
+
+        await using var gd = await _kho.Database.BeginTransactionAsync();
+        try
+        {
+            await NguoiDung.TaoTinhNguyenVien(_kho, sub, tenHienThi, _thoiGian.GetUtcNow().UtcDateTime);
+            await gd.CommitAsync();
+            return true;
+        }
+        catch (DbUpdateException)
+        {
+            // Hai yêu cầu đăng nhập đầu tiên đến cùng lúc: yêu cầu kia đã lập tài khoản.
+            await gd.RollbackAsync();
+            _kho.ChangeTracker.Clear();
+            return await NguoiDung.TimTheoDanhTinh(_kho, sub) is { DangHoatDong: true };
+        }
     }
 }

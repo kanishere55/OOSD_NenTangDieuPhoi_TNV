@@ -53,6 +53,14 @@ public static class CongOIDC
                 o.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 o.SignedOutRedirectUri = "/";
                 o.Events.OnTokenValidated = DoiMaVaKiemTra;
+                // Trang tạo tài khoản của Keycloak nhận cùng tham số với trang đăng nhập, chỉ khác địa chỉ.
+                o.Events.OnRedirectToIdentityProvider = ctx =>
+                {
+                    if (ctx.Properties.Items.ContainsKey(KhoaTaoMoi))
+                        ctx.ProtocolMessage.IssuerAddress = ctx.ProtocolMessage.IssuerAddress
+                            .Replace("/protocol/openid-connect/auth", "/protocol/openid-connect/registrations");
+                    return Task.CompletedTask;
+                };
                 o.Events.OnRemoteFailure = ctx =>
                 {
                     // Phân biệt tài khoản chưa được cấp với các lỗi khác (hủy đăng nhập, phiên đăng nhập quá hạn).
@@ -64,19 +72,35 @@ public static class CongOIDC
             });
     }
 
-    private const string LoiTaiKhoan = "Tài khoản chưa được cấp trên nền tảng hoặc đã ngừng hoạt động.";
+    private const string LoiTaiKhoan = "Tài khoản đã ngừng hoạt động trên nền tảng.";
 
     // Tạo yêu cầu đăng nhập: chuyển người dùng sang trang đăng nhập của Keycloak.
-    public static AuthenticationProperties TaoYeuCauDangNhap(string? quayVe)
-        => new() { RedirectUri = string.IsNullOrEmpty(quayVe) || !quayVe.StartsWith('/') ? "/" : quayVe };
+    // Khi taoMoi = true, người dùng được đưa tới trang tạo tài khoản của Keycloak thay cho trang đăng nhập.
+    public static AuthenticationProperties TaoYeuCauDangNhap(string? quayVe, bool taoMoi = false)
+    {
+        var yc = new AuthenticationProperties
+        {
+            RedirectUri = string.IsNullOrEmpty(quayVe) || !quayVe.StartsWith('/') || quayVe.StartsWith("//") ? "/" : quayVe
+        };
+        if (taoMoi) yc.Items[KhoaTaoMoi] = "1";
+        return yc;
+    }
+
+    private const string KhoaTaoMoi = "tao_tai_khoan";
 
     // Sau khi đổi mã xác nhận lấy token và kiểm tra chữ ký, đối chiếu danh tính với tài khoản đã cấp.
-    // Tài khoản chưa được cấp hoặc đã ngừng hoạt động thì không tạo phiên.
+    // Danh tính mới (người vừa tự đăng ký) được lập tài khoản tình nguyện viên; tài khoản đã ngừng
+    // hoạt động thì không tạo phiên.
     private static async Task DoiMaVaKiemTra(TokenValidatedContext ctx)
     {
         var sub = ctx.Principal?.FindFirst(ChinhSachTruyCap.LoaiClaimDinhDanh)?.Value;
+        // Tên người Việt viết họ trước tên.
+        var ho = ctx.Principal?.FindFirst("family_name")?.Value;
+        var ten = ctx.Principal?.FindFirst("given_name")?.Value;
+        var tenHienThi = $"{ho} {ten}".Trim();
+        if (tenHienThi.Length == 0) tenHienThi = ctx.Principal?.FindFirst("preferred_username")?.Value ?? "";
         var auth = ctx.HttpContext.RequestServices.GetRequiredService<AuthService>();
-        if (!await auth.XuLyCallback(sub))
+        if (!await auth.XuLyCallback(sub, tenHienThi))
             ctx.Fail(LoiTaiKhoan);
     }
 }

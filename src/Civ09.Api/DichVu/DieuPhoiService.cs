@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Civ09.Api.DichVu;
 
-// Xét duyệt đăng ký của một ca: gợi ý, phân công, từ chối (UC08).
+// Xét duyệt đăng ký của một ca: gợi ý, phân công, từ chối, hủy phân công (UC08).
 public class DieuPhoiService
 {
     private readonly KhoNghiepVu _kho;
@@ -34,7 +34,7 @@ public class DieuPhoiService
 
         return new
         {
-            ca.MaCaLam, ca.TieuDe, ca.BatDauDuKien, ca.KetThucDuKien, ca.SoNguoiCan, TrangThai = ca.TrangThaiCa,
+            ca.MaCaLam, ca.MaNhuCau, ca.TieuDe, ca.BatDauDuKien, ca.KetThucDuKien, ca.SoNguoiCan, TrangThai = ca.TrangThaiCa,
             KyNangYeuCau = tenKyNangCa,
             ca.SoDaPhanCong,
             DangKy = dangKy.Select(d => new
@@ -78,6 +78,23 @@ public class DieuPhoiService
 
             await _dieuKien.KiemTra(ca, hs);
             dk.PhanCong(nd.MaNguoiDung, BayGio);
+        });
+    }
+
+    // BR08, BR11: hủy phân công trước giờ bắt đầu, chỗ được trả lại cho ca.
+    public async Task HuyPhanCong(NguoiDangNhap nd, string maDangKy)
+    {
+        await _giaoDich.ThucHienAsync(async () =>
+        {
+            await _giaoDich.KhoaDongAsync("DangKyCaLam", "MaDangKy", maDangKy);
+            var dk = await DangKyCaLam.LayThongTin(_kho, maDangKy);
+            var ca = await CaLam.LayDieuKien(_kho, dk.MaCaLam);
+            _chinhSach.YeuCauThanhVien(nd, ca.MaToChuc, CacVaiTro.DieuPhoi);
+            if (dk.TrangThai != DangKyCaLam.DA_PHAN_CONG)
+                throw LoiNghiepVu.XungDot("Chỉ hủy phân công với đăng ký đã được phân công.");
+            if (BayGio >= ca.BatDauDuKien)
+                throw LoiNghiepVu.XungDot("Đã đến giờ bắt đầu ca nên không hủy phân công được.");
+            dk.Huy();
         });
     }
 

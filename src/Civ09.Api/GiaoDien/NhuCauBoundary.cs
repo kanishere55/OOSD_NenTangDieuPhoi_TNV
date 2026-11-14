@@ -34,4 +34,18 @@ public class NhuCauBoundary : BoundaryCoSo
         await _dv.CongBoNhuCau(await NguoiDungAsync(), ma, dl.PhienBan);
         return NoContent();
     }
+
+    [HttpPost("{ma}/dong")]
+    public async Task<IActionResult> DongNhuCau(string ma)
+    {
+        await _dv.DongNhuCau(await NguoiDungAsync(), ma);
+        return NoContent();
+    }
+
+    [HttpPost("{ma}/huy")]
+    public async Task<IActionResult> HuyNhuCau(string ma)
+    {
+        await _dv.HuyNhuCau(await NguoiDungAsync(), ma);
+        return NoContent();
+    }
 }

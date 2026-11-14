@@ -38,13 +38,20 @@ public class NhuCauCongDong
         => await kho.NhuCauCongDong.Include(n => n.ToChuc).FirstOrDefaultAsync(n => n.MaNhuCau == maNhuCau)
            ?? throw LoiNghiepVu.KhongTimThay("Không tìm thấy nhu cầu.");
 
-    // BR05: sửa nội dung công khai thì tăng phiên bản và phải rà soát lại.
-    public void CapNhatCongKhai(string tieuDe, string tomTat, string khuVuc)
+    // BR05: sửa nội dung công khai thì tăng phiên bản và phải rà soát lại. Nhu cầu đã công bố chỉ sửa được
+    // phần công khai khi chưa có ca, và khi đó trở về bản nháp.
+    public void CapNhatCongKhai(string tieuDe, string tomTat, string khuVuc, bool daCoCa)
     {
         tieuDe = tieuDe.Trim(); tomTat = tomTat.Trim(); khuVuc = khuVuc.Trim();
         if (tieuDe == TieuDe && tomTat == TomTatCongKhai && khuVuc == KhuVucChung) return;
-        if (TrangThai != NHAP)
-            throw LoiNghiepVu.XungDot("Chỉ sửa được nội dung công khai khi nhu cầu còn là bản nháp.");
+        if (TrangThai == CONG_BO)
+        {
+            if (daCoCa)
+                throw LoiNghiepVu.XungDot("Nhu cầu đã có ca làm nên không sửa được nội dung công khai. Phần hướng dẫn riêng vẫn sửa được.");
+            TrangThai = NHAP;
+        }
+        else if (TrangThai != NHAP)
+            throw LoiNghiepVu.XungDot("Nhu cầu đã đóng hoặc đã hủy nên không sửa được.");
         GanNoiDung(tieuDe, tomTat, khuVuc);
         PhienBanCongKhai++;
         DaRaSoatCongKhai = false;
@@ -60,6 +67,35 @@ public class NhuCauCongDong
             throw LoiNghiepVu.XungDot("Nội dung công khai đã thay đổi sau khi rà soát. Hãy đọc lại nội dung mới và rà soát trước khi công bố.");
         DaRaSoatCongKhai = true;
         TrangThai = CONG_BO;
+    }
+
+    // BR16: chỉ đóng nhu cầu đã công bố khi có ít nhất một ca và mọi ca đã kết thúc hoặc đã hủy.
+    public void Dong()
+    {
+        if (TrangThai != CONG_BO)
+            throw LoiNghiepVu.XungDot("Chỉ đóng được nhu cầu đã công bố.");
+        if (CaLam.Count == 0)
+            throw LoiNghiepVu.XungDot("Nhu cầu chưa có ca nào nên chưa đóng được. Nếu không cần nữa, hãy hủy nhu cầu.");
+        if (CaLam.Any(c => c.TrangThai is ThucThe.CaLam.MO or ThucThe.CaLam.DANG_DIEN_RA))
+            throw LoiNghiepVu.XungDot("Chỉ đóng nhu cầu khi tất cả các ca đã kết thúc hoặc đã hủy.");
+        TrangThai = DONG;
+    }
+
+    // BR16: chỉ hủy nhu cầu nháp hoặc đã công bố khi chưa có ca nào bắt đầu. Các ca còn mở và đăng ký
+    // còn hiệu lực của chúng bị hủy theo, lịch sử vẫn giữ.
+    public void Huy(DateTime bayGio)
+    {
+        if (TrangThai != NHAP && TrangThai != CONG_BO)
+            throw LoiNghiepVu.XungDot("Nhu cầu đã đóng hoặc đã hủy.");
+        if (CaLam.Any(c => c.TrangThai is ThucThe.CaLam.DANG_DIEN_RA or ThucThe.CaLam.DA_KET_THUC
+                           || (c.TrangThai == ThucThe.CaLam.MO && bayGio >= c.BatDauDuKien)))
+            throw LoiNghiepVu.XungDot("Đã có ca bắt đầu nên không hủy được nhu cầu. Khi các ca kết thúc, hãy đóng nhu cầu.");
+        foreach (var ca in CaLam.Where(c => c.TrangThai == ThucThe.CaLam.MO))
+        {
+            ca.Huy(bayGio);
+            foreach (var dk in ca.DangKy) dk.Huy();
+        }
+        TrangThai = DA_HUY;
     }
 
     private void GanNoiDung(string tieuDe, string tomTat, string khuVuc)

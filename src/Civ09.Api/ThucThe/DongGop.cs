@@ -99,10 +99,12 @@ public class DongGop
 public class CaCongKhai
 {
     public string MaCaLam { get; set; } = "";
+    public string TenToChuc { get; set; } = "";
     public string TieuDe { get; set; } = "";
     public string TomTatCongKhai { get; set; } = "";
     public string KhuVucChung { get; set; } = "";
     public DateTime BatDauDuKien { get; set; }
     public DateTime KetThucDuKien { get; set; }
     public int SoNguoiCan { get; set; }
+    public int SoDaPhanCong { get; set; }
 }

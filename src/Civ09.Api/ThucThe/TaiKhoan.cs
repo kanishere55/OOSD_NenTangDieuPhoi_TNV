@@ -29,6 +29,23 @@ public class NguoiDung
             .Include(x => x.ThanhVien).ThenInclude(t => t.ToChuc)
             .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.MaDinhDanhOIDC == subject);
+
+    // BR02: người mới tự đăng ký ở Keycloak được lập tài khoản với vai trò tình nguyện viên và một hồ sơ.
+    // Vai trò đại diện, điều phối viên không tạo ở đây mà do tổ chức cấp.
+    public static async Task<NguoiDung> TaoTinhNguyenVien(KhoNghiepVu kho, string subject, string? tenHienThi, DateTime thoiDiem)
+    {
+        var ten = (tenHienThi ?? "").Trim();
+        if (ten.Length == 0) ten = "Tình nguyện viên mới";
+        if (ten.Length > 100) ten = ten[..100];
+        var nd = new NguoiDung { MaDinhDanhOIDC = subject, TenHienThi = ten };
+        nd.VaiTro.Add(new NguoiDungVaiTro { MaNguoiDung = nd.MaNguoiDung, VaiTro = CacVaiTro.TinhNguyenVien });
+        kho.NguoiDung.Add(nd);
+        await kho.SaveChangesAsync();
+        // Hồ sơ tham chiếu vai trò tình nguyện viên vừa lưu ở trên nên được lưu sau.
+        kho.HoSoTinhNguyenVien.Add(new HoSoTinhNguyenVien { MaNguoiDung = nd.MaNguoiDung, NgayCapNhatKyNang = thoiDiem });
+        await kho.SaveChangesAsync();
+        return nd;
+    }
 }
 
 public class NguoiDungVaiTro

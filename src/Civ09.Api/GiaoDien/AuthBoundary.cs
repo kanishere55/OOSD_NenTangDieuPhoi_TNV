@@ -10,10 +10,11 @@ namespace Civ09.Api.GiaoDien;
 [Route("api/auth")]
 public class AuthBoundary : BoundaryCoSo
 {
-    // Chuyển sang trang đăng nhập của Keycloak.
+    // Chuyển sang trang đăng nhập của Keycloak. Với taoMoi = true thì mở trang tạo tài khoản; tạo xong,
+    // người dùng quay lại nền tảng như một lần đăng nhập.
     [HttpGet("dang-nhap")]
-    public IActionResult DangNhap([FromQuery] string? quayVe)
-        => Challenge(CongOIDC.TaoYeuCauDangNhap(quayVe), OpenIdConnectDefaults.AuthenticationScheme);
+    public IActionResult DangNhap([FromQuery] string? quayVe, [FromQuery] bool taoMoi = false)
+        => Challenge(CongOIDC.TaoYeuCauDangNhap(quayVe, taoMoi), OpenIdConnectDefaults.AuthenticationScheme);
 
     // Xóa phiên trên nền tảng và trên Keycloak.
     [HttpGet("dang-xuat")]

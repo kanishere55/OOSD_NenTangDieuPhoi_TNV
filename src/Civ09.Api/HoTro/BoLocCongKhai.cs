@@ -9,8 +9,8 @@ public record BoLocCa(string? MaKyNang, DateTime? TuNgay, DateTime? DenNgay, str
 
 // Một ca trong kết quả tìm kiếm công khai. Chỉ chứa các trường được phép công khai (BR01).
 public record CaCongKhaiDto(
-    string MaCaLam, string TieuDe, string TomTatCongKhai, string KhuVucChung,
-    DateTime BatDauDuKien, DateTime KetThucDuKien, int SoNguoiCan, List<string> KyNangYeuCau);
+    string MaCaLam, string TenToChuc, string TieuDe, string TomTatCongKhai, string KhuVucChung,
+    DateTime BatDauDuKien, DateTime KetThucDuKien, int SoNguoiCan, int SoDaPhanCong, List<string> KyNangYeuCau);
 
 public record TrangKetQua<T>(List<T> DanhSach, int Trang, int KichThuoc, int TongSo);
 
@@ -47,7 +47,8 @@ public class BoLocCongKhai
             .Select(y => new { y.MaCaLam, y.KyNang!.TenKyNang })
             .ToListAsync();
         return ds.Select(c => new CaCongKhaiDto(
-            c.MaCaLam, c.TieuDe, c.TomTatCongKhai, c.KhuVucChung, c.BatDauDuKien, c.KetThucDuKien, c.SoNguoiCan,
+            c.MaCaLam, c.TenToChuc, c.TieuDe, c.TomTatCongKhai, c.KhuVucChung, c.BatDauDuKien, c.KetThucDuKien,
+            c.SoNguoiCan, c.SoDaPhanCong,
             kyNang.Where(k => k.MaCaLam == c.MaCaLam).Select(k => k.TenKyNang).OrderBy(t => t).ToList())).ToList();
     }
 }

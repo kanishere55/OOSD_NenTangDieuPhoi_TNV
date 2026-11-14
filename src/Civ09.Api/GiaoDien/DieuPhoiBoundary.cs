@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Civ09.Api.GiaoDien;
 
-// Xét duyệt đăng ký: phân công, từ chối (UC08, màn hình M09).
+// Xét duyệt đăng ký: phân công, từ chối, hủy phân công (UC08, màn hình M09).
 [Authorize, Route("api")]
 public class DieuPhoiBoundary : BoundaryCoSo
 {
@@ -19,6 +19,13 @@ public class DieuPhoiBoundary : BoundaryCoSo
     public async Task<IActionResult> PhanCong(string ma)
     {
         await _dv.PhanCong(await NguoiDungAsync(), ma);
+        return NoContent();
+    }
+
+    [HttpPost("dang-ky/{ma}/huy-phan-cong")]
+    public async Task<IActionResult> HuyPhanCong(string ma)
+    {
+        await _dv.HuyPhanCong(await NguoiDungAsync(), ma);
         return NoContent();
     }
 

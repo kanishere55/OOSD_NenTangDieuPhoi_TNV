@@ -82,6 +82,38 @@ public class CaLam
 
     public IEnumerable<string> LayKyNangYeuCau() => YeuCauKyNang.Select(y => y.MaKyNang);
 
+    // BR11: chỉ sửa ca đang mở và chưa bắt đầu. Ca đã có người được phân công thì không đổi thời gian
+    // và kỹ năng; số người cần không thấp hơn số người đã phân công.
+    public void CapNhat(DateTime batDau, DateTime ketThuc, int soNguoiCan, IReadOnlyCollection<string> kyNang, DateTime bayGio)
+    {
+        if (TrangThai != MO || bayGio >= BatDauDuKien)
+            throw LoiNghiepVu.XungDot("Chỉ sửa được ca đang mở và chưa đến giờ bắt đầu.");
+        var moi = kyNang.Distinct().ToHashSet();
+        var doiGio = batDau != BatDauDuKien || ketThuc != KetThucDuKien;
+        var doiKyNang = !moi.SetEquals(LayKyNangYeuCau());
+        var soDaPhanCong = DangKy.Count(d => d.TrangThai == DangKyCaLam.DA_PHAN_CONG);
+        if (soDaPhanCong > 0 && (doiGio || doiKyNang))
+            throw LoiNghiepVu.XungDot("Ca đã có người được phân công nên không sửa được thời gian và kỹ năng. " +
+                                      "Muốn đổi thì hủy phân công trước, hoặc hủy ca rồi tạo ca mới.");
+        if (doiGio && batDau <= bayGio)
+            throw LoiNghiepVu.KhongHopLe("Ca phải bắt đầu trong tương lai.");
+        if (ketThuc <= batDau)
+            throw LoiNghiepVu.KhongHopLe("Giờ kết thúc phải sau giờ bắt đầu.");
+        if (soNguoiCan < 1)
+            throw LoiNghiepVu.KhongHopLe("Ca cần ít nhất một người.");
+        if (soNguoiCan < soDaPhanCong)
+            throw LoiNghiepVu.KhongHopLe($"Ca đã phân công {soDaPhanCong} người nên số người cần không được thấp hơn {soDaPhanCong}.");
+        if (moi.Count == 0)
+            throw LoiNghiepVu.KhongHopLe("Ca phải có ít nhất một kỹ năng bắt buộc.");
+
+        BatDauDuKien = batDau;
+        KetThucDuKien = ketThuc;
+        SoNguoiCan = soNguoiCan;
+        YeuCauKyNang.RemoveAll(y => !moi.Contains(y.MaKyNang));
+        foreach (var ma in moi.Where(m => YeuCauKyNang.All(y => y.MaKyNang != m)))
+            YeuCauKyNang.Add(new YeuCauKyNang { MaCaLam = MaCaLam, MaKyNang = ma });
+    }
+
     // BR12. Khi chạy thật, việc chuyển trạng thái theo giờ do thủ tục sp_ChuyenMocThoiGianCa làm theo lô;
     // hai phương thức dưới đây mô tả cùng quy tắc cho một ca và được dùng trong kiểm thử đơn vị.
     public void BatDau()

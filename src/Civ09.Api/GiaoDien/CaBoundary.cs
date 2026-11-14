@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Civ09.Api.GiaoDien;
 
-// Tìm ca, quản lý ca, đăng ký và rút đăng ký (UC04 đến UC07, màn hình M02, M03, M05, M08).
+// Tìm ca, quản lý ca, đăng ký và rút đăng ký (UC04 đến UC07, màn hình M02, M03, M05, M08, M14).
 [Route("api")]
 public class CaBoundary : BoundaryCoSo
 {
@@ -29,7 +29,13 @@ public class CaBoundary : BoundaryCoSo
     public async Task<IActionResult> TaoCa(string maNhuCau, [FromBody] CaNhap dl)
         => Ok(new { maCaLam = await _dv.TaoCa(await NguoiDungAsync(), maNhuCau, dl) });
 
-    // Hủy ca (chỉ qua API, không có màn hình riêng).
+    [Authorize, HttpPut("ca/{ma}")]
+    public async Task<IActionResult> CapNhatCa(string ma, [FromBody] CaNhap dl)
+    {
+        await _dv.CapNhatCa(await NguoiDungAsync(), ma, dl);
+        return NoContent();
+    }
+
     [Authorize, HttpPost("ca/{ma}/huy")]
     public async Task<IActionResult> HuyCa(string ma)
     {

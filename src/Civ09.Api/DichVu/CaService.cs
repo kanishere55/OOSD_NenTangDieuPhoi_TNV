@@ -48,6 +48,23 @@ public class CaService
         });
     }
 
+    // BR11: sửa ca đang mở trước giờ bắt đầu; ca, kỹ năng yêu cầu lưu trong cùng giao dịch.
+    public async Task CapNhatCa(NguoiDangNhap nd, string maCaLam, CaNhap dl)
+    {
+        var kyNang = (dl.KyNang ?? new()).Where(k => !string.IsNullOrWhiteSpace(k)).Distinct().ToList();
+        await _giaoDich.ThucHienAsync(async () =>
+        {
+            await _giaoDich.KhoaDongAsync("CaLam", "MaCaLam", maCaLam);
+            var ca = await _kho.CaLam.Include(c => c.NhuCau).Include(c => c.YeuCauKyNang).Include(c => c.DangKy)
+                         .AsSplitQuery().FirstOrDefaultAsync(c => c.MaCaLam == maCaLam)
+                     ?? throw LoiNghiepVu.KhongTimThay("Không tìm thấy ca.");
+            _chinhSach.YeuCauThanhVien(nd, ca.NhuCau!.MaToChuc, CacVaiTro.DieuPhoi);
+            if (await _kho.KyNang.CountAsync(k => kyNang.Contains(k.MaKyNang)) != kyNang.Count)
+                throw LoiNghiepVu.KhongHopLe("Có kỹ năng không nằm trong danh mục.");
+            ca.CapNhat(ChuanUtc(dl.BatDauDuKien), ChuanUtc(dl.KetThucDuKien), dl.SoNguoiCan, kyNang, BayGio);
+        });
+    }
+
     public async Task<List<object>> XemCaCuaNhuCau(NguoiDangNhap nd, string maNhuCau)
     {
         var nc = await NhuCauCongDong.LayThongTin(_kho, maNhuCau);
@@ -58,6 +75,7 @@ public class CaService
             {
                 c.MaCaLam, c.BatDauDuKien, c.KetThucDuKien, c.SoNguoiCan, c.TrangThai,
                 KyNangYeuCau = c.YeuCauKyNang.Select(y => y.KyNang!.TenKyNang).ToList(),
+                MaKyNangYeuCau = c.YeuCauKyNang.Select(y => y.MaKyNang).ToList(),
                 SoChoDuyet = c.DangKy.Count(d => d.TrangThai == DangKyCaLam.CHO_DUYET),
                 SoDaPhanCong = c.DangKy.Count(d => d.TrangThai == DangKyCaLam.DA_PHAN_CONG)
             }).ToListAsync();
@@ -129,13 +147,13 @@ public class CaService
             {
                 d.MaDangKy, d.MaCaLam, d.TrangThai, d.NgayDangKy,
                 d.CaLam!.BatDauDuKien, d.CaLam.KetThucDuKien, TrangThaiCa = d.CaLam.TrangThai,
-                d.CaLam.NhuCau!.TieuDe, d.CaLam.NhuCau.KhuVucChung,
+                d.CaLam.NhuCau!.TieuDe, d.CaLam.NhuCau.KhuVucChung, TenToChuc = d.CaLam.NhuCau.ToChuc!.TenToChuc,
                 DongGop = d.DongGop == null ? null : new { d.DongGop.MaDongGop, d.DongGop.TrangThai, d.DongGop.LyDoTraLai }
             }).ToListAsync();
         return ds.Select(d => (object)new
         {
             d.MaDangKy, d.MaCaLam, d.TrangThai, d.NgayDangKy, d.BatDauDuKien, d.KetThucDuKien, d.TrangThaiCa,
-            d.TieuDe, d.KhuVucChung, d.DongGop,
+            d.TieuDe, d.KhuVucChung, d.TenToChuc, d.DongGop,
             DuocRut = (d.TrangThai == DangKyCaLam.CHO_DUYET || d.TrangThai == DangKyCaLam.DA_PHAN_CONG) && bayGio < d.BatDauDuKien,
             DuocKhai = d.TrangThai == DangKyCaLam.DA_PHAN_CONG && d.TrangThaiCa != CaLam.DA_HUY && bayGio >= d.KetThucDuKien
                        && (d.DongGop == null || d.DongGop.TrangThai == DongGop.CAN_BO_SUNG),
