@@ -30,8 +30,7 @@ export default function DuyetDongGop() {
   if (ds.loi) return <ThongBao loi={ds.loi} />
   return (
     <>
-      <DauTrang tieuDe="Duyệt đóng góp"
-        moTa="Sau mỗi ca, tình nguyện viên khai giờ đã làm. Bạn đối chiếu với thực tế rồi xác nhận, hoặc trả lại kèm lý do để họ sửa." />
+      <DauTrang tieuDe="Duyệt đóng góp" />
       <ThongBao loi={tt.loi} thanhCong={tt.thanhCong} />
       {ds.duLieu.length === 0 ? <Trong><p>Không có bản khai nào đang chờ duyệt.</p></Trong> : (
         <ul className="ds-dong">

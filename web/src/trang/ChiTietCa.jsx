@@ -73,8 +73,8 @@ export default function ChiTietCa() {
           <>
             <p>Bạn đã đăng ký ca này. Tình trạng: <TrangThai ma={dk.trangThai} /></p>
             {dk.trangThai === 'CHO_DUYET'
-              ? <p className="mo">Điều phối viên sẽ xem xét. Bạn chỉ chính thức có chỗ khi được phân công.</p>
-              : <p className="mo">Bạn đã có chỗ trong ca. Hãy xem hướng dẫn riêng trước khi đến.</p>}
+              ? <p className="mo">Bạn có chỗ trong ca khi được điều phối viên phân công.</p>
+              : null}
             <div className="hang-nut">
               {dk.trangThai === 'DA_PHAN_CONG' && <Link className="nut" to={`/ca/${ma}/huong-dan-rieng`}>Xem hướng dẫn riêng</Link>}
               <Link className="nut phu" to="/dang-ky-cua-toi">Xem đăng ký của tôi</Link>
@@ -85,14 +85,13 @@ export default function ChiTietCa() {
           <>
             <div className="thong-bao canh-bao">
               <p>Ca này cần kỹ năng <strong>{thieu.join(', ')}</strong> nhưng hồ sơ của bạn chưa có, nên chưa đăng ký được.</p>
-              <p>Nếu bạn có kỹ năng này, hãy thêm vào hồ sơ rồi quay lại đăng ký.</p>
             </div>
             <Link className="nut" to="/ho-so">Cập nhật kỹ năng</Link>
           </>
         )}
         {laTnv && cuaToi.duLieu && !dk && thieu.length === 0 && (
           <>
-            <p>Bạn có đủ kỹ năng mà ca yêu cầu. Sau khi đăng ký, điều phối viên sẽ xem xét và phân công.</p>
+            <p>Bạn có đủ kỹ năng mà ca yêu cầu.</p>
             <button className="lon" onClick={dangKy} disabled={tt.dangGui}>Đăng ký tham gia</button>
           </>
         )}

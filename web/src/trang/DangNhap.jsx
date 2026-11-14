@@ -17,12 +17,11 @@ export default function DangNhap() {
   return (
     <section className="the hep">
       <h1>Đăng nhập</h1>
-      <p>Bấm nút dưới đây, trang đăng nhập sẽ mở ra để bạn gõ tên đăng nhập và mật khẩu.</p>
       <div className="hang-nut">
         <button className="lon" onClick={() => dangNhap('/')}>Đăng nhập</button>
       </div>
       <h2>Chưa có tài khoản?</h2>
-      <p>Ai cũng có thể tạo tài khoản tình nguyện viên. Tài khoản của đại diện và điều phối viên do nền tảng cấp cho tổ chức.</p>
+      <p>Tài khoản của đại diện và điều phối viên được cấp cho tổ chức, không tự tạo.</p>
       <button className="phu" onClick={() => dangKyTaiKhoan()}>Tạo tài khoản tình nguyện viên</button>
     </section>
   )

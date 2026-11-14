@@ -73,7 +73,7 @@ export default function FormNhuCau() {
     await tt.chay(async () => {
       await api.post(`/api/nhu-cau/${ma}/cong-bo`, { phienBan: nc.phienBanCongKhai })
       await tai()
-    }, 'Đã công bố nhu cầu. Điều phối viên có thể tạo ca làm từ bây giờ.')
+    }, 'Đã công bố nhu cầu.')
   }
 
   const ketThuc = async () => {
@@ -115,15 +115,15 @@ export default function FormNhuCau() {
         )}
         {!ma && toChucDaiDien.length === 1 && <p>Tổ chức: <strong>{toChucDaiDien[0].tenToChuc}</strong></p>}
         <label>Tiêu đề
-          <small>Nêu ngắn gọn việc cần hỗ trợ, ví dụ: Hướng dẫn dùng điện thoại thông minh cho người lớn tuổi.</small>
+          <small>Ví dụ: Hướng dẫn dùng điện thoại thông minh cho người lớn tuổi.</small>
           <input value={form.tieuDe} onChange={doi('tieuDe')} disabled={!suaCongKhai} maxLength={150} />
         </label>
         <label>Tóm tắt công khai
-          <small>Mô tả công việc tình nguyện viên sẽ làm, một đến ba câu.</small>
+          <small>Công việc tình nguyện viên sẽ làm.</small>
           <textarea rows={3} value={form.tomTatCongKhai} onChange={doi('tomTatCongKhai')} disabled={!suaCongKhai} />
         </label>
         <label>Khu vực chung
-          <small>Chỉ ghi đến phường, xã, ví dụ: Phường An Bình. Địa chỉ cụ thể ghi ở phần hướng dẫn riêng bên dưới.</small>
+          <small>Chỉ ghi đến phường, xã. Địa chỉ cụ thể ghi ở phần hướng dẫn riêng.</small>
           <input value={form.khuVucChung} onChange={doi('khuVucChung')} disabled={!suaCongKhai} maxLength={150} />
         </label>
         {laDaiDien && trangThai === 'CONG_BO' && nc.soCa === 0 && (
@@ -136,9 +136,9 @@ export default function FormNhuCau() {
 
       <fieldset className="rieng">
         <legend>Hướng dẫn điều phối riêng (không bắt buộc)</legend>
-        <p className="mo">Chỉ đại diện, điều phối viên của tổ chức và tình nguyện viên đã được phân công mới xem được, và chỉ đến khi ca kết thúc. Chỉ ghi những gì cần cho việc đến làm.</p>
+        <p className="mo">Chỉ đại diện, điều phối viên của tổ chức và tình nguyện viên đã được phân công xem được, đến khi ca kết thúc.</p>
         <label>Nội dung hướng dẫn
-          <small>Ví dụ: địa điểm cụ thể, gặp ai khi đến, cần mang theo gì, lưu ý khi tiếp xúc.</small>
+          <small>Ví dụ: địa điểm cụ thể, gặp ai khi đến, cần mang theo gì.</small>
           <textarea rows={4} value={form.huongDanRieng} onChange={doi('huongDanRieng')} disabled={!suaRieng} />
         </label>
       </fieldset>
@@ -158,7 +158,7 @@ export default function FormNhuCau() {
       {ma && laNhap && laDaiDien && (
         <section className="the" style={{ marginTop: 22 }}>
           <h2 style={{ marginTop: 0 }}>Rà soát và công bố</h2>
-          <p>Trước khi công bố, hãy đọc lại đúng những gì người ngoài sẽ nhìn thấy:</p>
+          <p>Nội dung người ngoài sẽ thấy:</p>
           <div className="xem-truoc">
             <p><strong>{nc.tieuDe}</strong></p>
             <p>{nc.tomTatCongKhai}</p>
@@ -170,7 +170,6 @@ export default function FormNhuCau() {
             <span>Tôi đã đọc lại nội dung trên và xác nhận không để lộ thông tin của người được hỗ trợ.</span>
           </label>
           <button className="lon" disabled={tt.dangGui || !daRaSoat} onClick={congBo}>Công bố nhu cầu</button>
-          {!daRaSoat && <p className="mo">Nút Công bố bấm được sau khi bạn đánh dấu ô xác nhận ở trên.</p>}
         </section>
       )}
 
@@ -187,13 +186,13 @@ export default function FormNhuCau() {
           <h2 style={{ marginTop: 0 }}>Kết thúc nhu cầu</h2>
           {duocDong && (
             <>
-              <p>Tất cả các ca đã kết thúc hoặc đã hủy. Đóng nhu cầu để khép lại việc này; sau khi đóng không tạo thêm ca được.</p>
+              <p>Tất cả các ca đã kết thúc hoặc đã hủy. Sau khi đóng, nhu cầu không tạo thêm ca được.</p>
               <button onClick={() => setHoi('dong')}>Đóng nhu cầu</button>
             </>
           )}
           {duocHuy && (
             <>
-              <p>Nếu việc này không còn cần nữa, bạn có thể hủy nhu cầu khi chưa có ca nào bắt đầu.</p>
+              <p>Hủy được khi chưa có ca nào bắt đầu.</p>
               <button className="phu nguy-hiem" onClick={() => setHoi('huy')}>Hủy nhu cầu</button>
             </>
           )}

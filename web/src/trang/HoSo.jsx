@@ -34,7 +34,7 @@ export default function HoSo() {
   return (
     <>
       <DauTrang tieuDe="Hồ sơ và kỹ năng"
-        moTa="Đánh dấu những kỹ năng bạn có. Bạn chỉ đăng ký được ca khi có đủ các kỹ năng mà ca yêu cầu." />
+        moTa="Bạn chỉ đăng ký được ca khi có đủ kỹ năng mà ca yêu cầu." />
       <section className="the">
         <dl className="thong-tin">
           <dt>Họ tên</dt><dd>{h.tenHienThi}</dd>

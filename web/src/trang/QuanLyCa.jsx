@@ -44,7 +44,7 @@ export default function QuanLyCa() {
       ? await tt.chay(() => api.put('/api/ca/' + dangSua.maCaLam, dl))
       : await tt.chay(() => api.post(`/api/nhu-cau/${ma}/ca`, dl))
     if (ok) {
-      ttDs.setThanhCong(dangSua ? 'Đã lưu thay đổi của ca.' : 'Đã tạo ca. Ca đã hiện trong danh sách tìm ca để tình nguyện viên đăng ký.')
+      ttDs.setThanhCong(dangSua ? 'Đã lưu thay đổi của ca.' : 'Đã tạo ca.')
       thoiSua()
       ds.taiLai(); nc.taiLai()
     }
@@ -78,7 +78,6 @@ export default function QuanLyCa() {
       <DuongDan muc={[{ ten: 'Nhu cầu của tổ chức', den: '/nhu-cau' }, { ten: n.tieuDe, den: '/nhu-cau/' + ma }, { ten: 'Ca làm' }]} />
       <h1>Ca làm của nhu cầu</h1>
       <p className="mo-ta"><strong>{n.tieuDe}</strong> · <TrangThai ma={n.trangThai} /></p>
-      <p className="mo-ta">Mỗi ca là một buổi làm việc có ngày giờ, số người cần và kỹ năng yêu cầu. Tình nguyện viên đăng ký theo từng ca.</p>
       {n.trangThai === 'NHAP' && <div className="thong-bao canh-bao">Nhu cầu còn là bản nháp. Đại diện cần công bố nhu cầu trước khi tạo ca.</div>}
       {(n.trangThai === 'DONG' || n.trangThai === 'DA_HUY') && <div className="thong-bao tin">Nhu cầu đã đóng hoặc đã hủy nên không tạo thêm ca.</div>}
       {n.trangThai === 'CONG_BO' && !n.laDieuPhoi && <div className="thong-bao tin">Bạn đang xem ở vai trò đại diện. Điều phối viên của tổ chức là người tạo ca và phân công.</div>}
@@ -116,7 +115,7 @@ export default function QuanLyCa() {
           <h2 style={{ marginTop: 0 }}>{dangSua ? 'Sửa ca' : 'Tạo ca mới'}</h2>
           {dangSua && <p className="mo">Đang sửa ca: {hienKhoangGio(dangSua.batDauDuKien, dangSua.ketThucDuKien)}</p>}
           {khoaGio && <div className="thong-bao tin">Ca đã có {dangSua.soDaPhanCong} người được phân công nên chỉ sửa được số người cần. Muốn đổi giờ hoặc kỹ năng, hãy hủy phân công trước.</div>}
-          <ChonNgayGio nhan="Bắt đầu" giaTri={form.batDau} onDoi={doiBatDau} loi={loiO.batDau} tatDi={khoaGio} goiY="Giờ Việt Nam. Ca phải bắt đầu trong tương lai." />
+          <ChonNgayGio nhan="Bắt đầu" giaTri={form.batDau} onDoi={doiBatDau} loi={loiO.batDau} tatDi={khoaGio} goiY="Giờ Việt Nam." />
           <ChonNgayGio nhan="Kết thúc" giaTri={form.ketThuc} onDoi={(v) => setForm({ ...form, ketThuc: v })} loi={loiO.ketThuc} tatDi={khoaGio} />
           <label style={{ maxWidth: 220 }}>Số người cần
             <input type="number" min={dangSua ? Math.max(1, dangSua.soDaPhanCong) : 1} value={form.soNguoiCan} onChange={(e) => setForm({ ...form, soNguoiCan: e.target.value })} />
@@ -147,7 +146,7 @@ export default function QuanLyCa() {
         <HopXacNhan tieuDe="Hủy ca này?" nhanDongY="Hủy ca" dangGui={ttDs.dangGui} onDongY={huyCa} onThoi={() => setCaDangHuy(null)}>
           <p><strong>{hienKhoangGio(caDangHuy.batDauDuKien, caDangHuy.ketThucDuKien)}</strong></p>
           <p>Ca đang có {caDangHuy.soDaPhanCong} người đã phân công và {caDangHuy.soChoDuyet} đăng ký chờ duyệt. Tất cả các đăng ký này sẽ bị hủy theo.</p>
-          <p>Thao tác này không hoàn tác được. Nếu chỉ cần đổi giờ hay số người, hãy dùng nút Sửa.</p>
+          <p>Thao tác này không hoàn tác được.</p>
         </HopXacNhan>
       )}
     </>

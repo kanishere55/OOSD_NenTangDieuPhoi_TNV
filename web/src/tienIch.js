@@ -82,26 +82,20 @@ export const TEN_TRANG_THAI = {
   DA_XAC_NHAN: 'Đã xác nhận'
 }
 
-// Câu giải thích đi kèm trạng thái, để người dùng biết điều gì đang xảy ra và việc tiếp theo.
+// Ghi chú đi kèm trạng thái ở những chỗ tên trạng thái chưa đủ rõ.
 export const GIAI_THICH_NHU_CAU = {
-  NHAP: 'Chưa ai ngoài tổ chức nhìn thấy. Cần rà soát rồi công bố.',
-  CONG_BO: 'Điều phối viên có thể tạo ca làm cho nhu cầu này.',
-  DONG: 'Các ca đã xong, nhu cầu đã khép lại.',
-  DA_HUY: 'Nhu cầu đã hủy, không tạo thêm ca.'
+  NHAP: 'Chỉ tổ chức nhìn thấy.'
 }
 
 export const GIAI_THICH_DANG_KY = {
-  CHO_DUYET: 'Điều phối viên chưa duyệt. Bạn chưa có chỗ trong ca.',
+  CHO_DUYET: 'Bạn chưa có chỗ trong ca.',
   DA_PHAN_CONG: 'Bạn đã có chỗ trong ca.',
-  TU_CHOI: 'Điều phối viên không chọn đăng ký này. Bạn có thể tìm ca khác.',
-  DA_RUT: 'Bạn đã rút đăng ký này.',
-  DA_HUY: 'Đăng ký không còn hiệu lực: ca bị hủy, bạn bị hủy phân công, hoặc đến giờ bắt đầu mà đăng ký chưa được duyệt.'
+  DA_HUY: 'Ca bị hủy, bạn bị hủy phân công, hoặc đăng ký chưa được duyệt khi ca bắt đầu.'
 }
 
 export const GIAI_THICH_DONG_GOP = {
-  CHO_DUYET: 'Điều phối viên chưa xem bản khai.',
-  CAN_BO_SUNG: 'Điều phối viên trả lại để bạn sửa.',
-  DA_XAC_NHAN: 'Số giờ đã được cộng vào tổng giờ của bạn.'
+  CHO_DUYET: 'Điều phối viên chưa duyệt.',
+  DA_XAC_NHAN: 'Đã cộng vào tổng giờ.'
 }
 
 export const TEN_VAI_TRO = { TNV: 'Tình nguyện viên', DAI_DIEN: 'Đại diện cộng đồng', DIEU_PHOI: 'Điều phối viên' }

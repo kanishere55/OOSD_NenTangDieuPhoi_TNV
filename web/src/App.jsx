@@ -118,9 +118,6 @@ export default function App() {
           <Route path="*" element={<div className="trong"><p>Không tìm thấy trang này.</p><p><Link className="nut" to="/">Về trang chủ</Link></p></div>} />
         </Routes>
       </main>
-      <footer className="chan-trang">
-        <div>Nền tảng điều phối tình nguyện viên theo kỹ năng. Giờ hiển thị trên trang là giờ Việt Nam.</div>
-      </footer>
     </NguoiDungContext.Provider>
   )
 }

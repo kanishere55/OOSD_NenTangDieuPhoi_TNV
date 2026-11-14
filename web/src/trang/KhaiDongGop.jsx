@@ -41,7 +41,7 @@ export default function KhaiDongGop() {
     await tt.chay(async () => {
       await api.post(`/api/dang-ky/${ma}/dong-gop`, { batDauThucTe: a, ketThucThucTe: b, moTaCongViec: form.moTa })
       const { b: moi } = await tai()
-      tt.setThanhCong(`Đã gửi bản khai, hệ thống tính được ${soGio(moi.soGio)} giờ. Bản khai đang chờ điều phối viên duyệt; khi được xác nhận, số giờ sẽ cộng vào tổng giờ của bạn.`)
+      tt.setThanhCong(`Đã gửi bản khai (${soGio(moi.soGio)} giờ). Bản khai đang chờ điều phối viên duyệt.`)
     })
   }
 
@@ -54,7 +54,7 @@ export default function KhaiDongGop() {
       {duongDan}
       <section className="the hep">
         <h1>Khai đóng góp</h1>
-        <p className="mo-ta">Ghi lại thời gian bạn thực sự làm việc trong ca và công việc đã làm. Số giờ do hệ thống tự tính.</p>
+        <p className="mo-ta">Số giờ do hệ thống tính từ thời gian bạn khai.</p>
         <dl className="thong-tin">
           <dt>Ca làm</dt><dd>{dk.tieuDe}</dd>
           <dt>Thời gian của ca</dt><dd>{hienKhoangGio(dk.batDauDuKien, dk.ketThucDuKien)}</dd>
@@ -70,7 +70,7 @@ export default function KhaiDongGop() {
           <ChonNgayGio nhan="Bạn kết thúc lúc" giaTri={form.ketThuc} tatDi={!choSua} onDoi={(v) => setForm({ ...form, ketThuc: v })} />
           {choSua && soGioTam !== null && <p>Số giờ sẽ được tính: <strong>{soGio(soGioTam)} giờ</strong></p>}
           <label>Công việc bạn đã làm
-            <small>Ví dụ: Hướng dẫn 4 cô chú cài ứng dụng đặt lịch khám và đặt thử một lịch.</small>
+            <small>Ví dụ: Kèm Toán cho 3 em lớp 4.</small>
             <textarea rows={3} value={form.moTa} disabled={!choSua} onChange={(e) => setForm({ ...form, moTa: e.target.value })} />
           </label>
           <ThongBao loi={tt.loi} thanhCong={tt.thanhCong} />

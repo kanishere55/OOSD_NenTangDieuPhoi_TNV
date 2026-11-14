@@ -11,7 +11,6 @@ export default function TrangChu() {
   return (
     <>
       <h1>Xin chào, {nguoiDung.tenHienThi}</h1>
-      <p className="mo-ta">Dưới đây là những việc đang chờ bạn. Bấm vào nút ở mỗi dòng để làm việc đó.</p>
       {laTnv && <ViecCuaTinhNguyenVien />}
       {laDaiDien && <ViecCuaDaiDien />}
       {laDieuPhoi && <ViecCuaDieuPhoi />}
@@ -27,10 +26,10 @@ function ChoKhach() {
   return (
     <>
       <section className="gioi-thieu">
-        <h1>Góp sức cho những việc cộng đồng đang cần</h1>
+        <h1>Tìm ca tình nguyện hợp với kỹ năng của bạn</h1>
         <p>
-          Các tổ chức cộng đồng đăng việc cần người hỗ trợ, chia thành từng ca làm có ngày giờ cụ thể.
-          Bạn chọn ca hợp với kỹ năng của mình, đến làm, rồi được ghi nhận số giờ đã đóng góp.
+          Các tổ chức cộng đồng đăng việc cần người hỗ trợ theo từng ca làm.
+          Bạn chọn ca phù hợp, đến làm và được ghi nhận số giờ đóng góp.
         </p>
         <div className="hang-nut">
           <Link className="nut lon" to="/tim-ca">Xem các ca đang cần người</Link>
@@ -41,10 +40,10 @@ function ChoKhach() {
 
       <h2>Tham gia như thế nào</h2>
       <ol className="ds-buoc">
-        <li>Tạo tài khoản rồi chọn những kỹ năng bạn có, ví dụ tin học cơ bản, dạy kèm, nấu ăn.</li>
-        <li>Tìm ca làm hợp với kỹ năng và thời gian của bạn, bấm Đăng ký.</li>
-        <li>Chờ điều phối viên phân công. Khi được phân công, bạn xem được hướng dẫn chi tiết để đến làm.</li>
-        <li>Sau buổi làm, khai giờ đã làm. Điều phối viên xác nhận thì số giờ được cộng vào tổng giờ của bạn.</li>
+        <li>Tạo tài khoản và chọn kỹ năng bạn có.</li>
+        <li>Tìm ca hợp với kỹ năng và thời gian, bấm Đăng ký.</li>
+        <li>Chờ điều phối viên phân công, rồi xem hướng dẫn để đến làm.</li>
+        <li>Sau buổi làm, khai giờ đã làm để được xác nhận.</li>
       </ol>
 
       <h2>Các ca sắp diễn ra</h2>
@@ -69,8 +68,7 @@ function ChoKhach() {
 
       <h2>Dành cho tổ chức cộng đồng</h2>
       <p className="mo-ta">
-        Tài khoản của đại diện và điều phối viên do nền tảng cấp cho từng tổ chức. Nếu tổ chức của bạn đã có tài khoản,
-        hãy bấm Đăng nhập ở góc trên bên phải để đăng nhu cầu, tạo ca và phân công tình nguyện viên.
+        Đại diện và điều phối viên dùng tài khoản được cấp cho tổ chức, đăng nhập ở góc trên bên phải.
       </p>
     </>
   )
@@ -104,7 +102,7 @@ function ViecCuaTinhNguyenVien() {
       <h2>Việc của tình nguyện viên</h2>
       {chuaCoKyNang && (
         <Viec loai="gap" tieuDe="Bạn chưa chọn kỹ năng nào"
-          moTa="Mỗi ca làm yêu cầu một số kỹ năng. Hãy chọn kỹ năng bạn có để đăng ký được ca.">
+          moTa="Cần có kỹ năng trong hồ sơ mới đăng ký được ca.">
           <Link className="nut" to="/ho-so">Chọn kỹ năng</Link>
         </Viec>
       )}
@@ -123,12 +121,12 @@ function ViecCuaTinhNguyenVien() {
       ))}
       {choDuyet.length > 0 && (
         <Viec loai="xong" tieuDe={`${choDuyet.length} đăng ký đang chờ điều phối viên duyệt`}
-          moTa="Bạn chưa cần làm gì. Khi được phân công, ca sẽ hiện ở đây.">
+          moTa="Khi được phân công, ca sẽ hiện ở đây.">
           <Link className="nut phu" to="/dang-ky-cua-toi">Xem đăng ký của tôi</Link>
         </Viec>
       )}
       {khongCoViec && (
-        <Viec loai="xong" tieuDe="Bạn chưa có ca nào sắp tới" moTa="Hãy tìm một ca hợp với kỹ năng và thời gian của bạn.">
+        <Viec loai="xong" tieuDe="Bạn chưa có ca nào sắp tới">
           <Link className="nut" to="/tim-ca">Tìm ca làm</Link>
         </Viec>
       )}
@@ -158,8 +156,7 @@ function ViecCuaDaiDien() {
           <Link className="nut phu" to={'/nhu-cau/' + n.maNhuCau}>Mở nhu cầu</Link>
         </Viec>
       ))}
-      <Viec loai="xong" tieuDe="Tổ chức cần người hỗ trợ cho một việc mới?"
-        moTa="Tạo nhu cầu, rà soát nội dung công khai rồi công bố để điều phối viên chia ca.">
+      <Viec loai="xong" tieuDe="Nhu cầu của tổ chức">
         <Link className="nut" to="/nhu-cau/moi">Tạo nhu cầu mới</Link>
         <Link className="nut phu" to="/nhu-cau">Xem các nhu cầu</Link>
       </Viec>
@@ -183,13 +180,12 @@ function ViecCuaDieuPhoi() {
       <h2>Việc của điều phối viên</h2>
       {choDuyet > 0 && (
         <Viec loai="gap" tieuDe={`${choDuyet} đăng ký đang chờ bạn duyệt`}
-          moTa="Xem người đăng ký từng ca rồi phân công hoặc từ chối trước giờ ca bắt đầu.">
+          moTa="Cần duyệt trước giờ ca bắt đầu.">
           <Link className="nut" to="/dieu-phoi">Xét duyệt đăng ký</Link>
         </Viec>
       )}
       {soBanKhai > 0 && (
-        <Viec loai="gap" tieuDe={`${soBanKhai} bản khai đóng góp đang chờ duyệt`}
-          moTa="Xác nhận bản khai đúng, hoặc trả lại kèm lý do để tình nguyện viên bổ sung.">
+        <Viec loai="gap" tieuDe={`${soBanKhai} bản khai đóng góp đang chờ duyệt`}>
           <Link className="nut" to="/dong-gop/cho-duyet">Duyệt đóng góp</Link>
         </Viec>
       )}
@@ -199,7 +195,7 @@ function ViecCuaDieuPhoi() {
         </Viec>
       ))}
       {choDuyet === 0 && soBanKhai === 0 && chuaCoCa.length === 0 && (
-        <Viec loai="xong" tieuDe="Hiện không có việc nào chờ bạn xử lý" moTa="Bạn có thể xem lại các ca sắp diễn ra của tổ chức.">
+        <Viec loai="xong" tieuDe="Hiện không có việc nào chờ bạn xử lý">
           <Link className="nut phu" to="/dieu-phoi">Xem các ca</Link>
         </Viec>
       )}

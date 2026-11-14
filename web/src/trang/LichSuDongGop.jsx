@@ -11,7 +11,7 @@ export default function LichSuDongGop() {
   const d = kq.duLieu
   return (
     <>
-      <DauTrang tieuDe="Lịch sử và tổng giờ đóng góp" moTa="Các bản khai đóng góp của bạn. Chỉ bản đã được điều phối viên xác nhận mới tính vào tổng giờ." />
+      <DauTrang tieuDe="Lịch sử và tổng giờ đóng góp" moTa="Chỉ bản khai đã được xác nhận mới tính vào tổng giờ." />
       <div className="o-tong">
         <span>Tổng giờ đã được xác nhận</span>
         <strong>{soGio(d.tongGioDaXacNhan)} giờ</strong>

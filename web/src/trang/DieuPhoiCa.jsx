@@ -49,8 +49,7 @@ export default function DieuPhoiCa() {
 
   return (
     <>
-      <DauTrang tieuDe="Điều phối ca"
-        moTa="Tất cả ca làm của tổ chức, ca gần nhất ở trên. Dòng có vạch cam là ca đang có đăng ký chờ duyệt.">
+      <DauTrang tieuDe="Điều phối ca">
         <Link className="nut phu" to="/nhu-cau">Tạo ca từ một nhu cầu</Link>
       </DauTrang>
       {ds.duLieu.length === 0 && (

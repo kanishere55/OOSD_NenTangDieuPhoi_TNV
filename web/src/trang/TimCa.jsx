@@ -57,8 +57,7 @@ export default function TimCa() {
 
   return (
     <>
-      <DauTrang tieuDe="Tìm ca làm"
-        moTa="Ca làm là một buổi làm việc tình nguyện có ngày giờ cụ thể. Danh sách dưới đây gồm các ca đang nhận đăng ký." />
+      <DauTrang tieuDe="Tìm ca làm" />
       <form className="the" onSubmit={tim}>
         <div className="bo-loc">
           <label>Kỹ năng ca cần
@@ -74,7 +73,7 @@ export default function TimCa() {
           </label>
         </div>
         <div className="cuoi-bo-loc">
-          <span className="mo" style={{ marginRight: 'auto' }}>Để trống các ô nếu muốn xem tất cả.</span>
+          <span style={{ marginRight: 'auto' }} />
           {dangLoc && <button type="button" className="phu" onClick={boLoc}>Bỏ lọc</button>}
           <button type="submit">Tìm ca</button>
         </div>

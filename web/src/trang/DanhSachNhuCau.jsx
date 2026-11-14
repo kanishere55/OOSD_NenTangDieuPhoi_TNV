@@ -12,8 +12,7 @@ export default function DanhSachNhuCau() {
   if (ds.loi) return <ThongBao loi={ds.loi} />
   return (
     <>
-      <DauTrang tieuDe="Nhu cầu của tổ chức"
-        moTa="Nhu cầu là một việc tổ chức cần người hỗ trợ. Đại diện tạo và công bố nhu cầu, sau đó điều phối viên chia thành các ca làm.">
+      <DauTrang tieuDe="Nhu cầu của tổ chức">
         {laDaiDien && <Link className="nut" to="/nhu-cau/moi">Tạo nhu cầu mới</Link>}
       </DauTrang>
       {ds.duLieu.length === 0 ? (
@@ -21,7 +20,7 @@ export default function DanhSachNhuCau() {
           <p>Tổ chức chưa có nhu cầu nào.</p>
           {laDaiDien
             ? <div className="hang-nut"><Link className="nut" to="/nhu-cau/moi">Tạo nhu cầu đầu tiên</Link></div>
-            : <p>Đại diện của tổ chức là người tạo nhu cầu. Khi có nhu cầu đã công bố, bạn sẽ tạo ca tại đây.</p>}
+            : <p>Đại diện của tổ chức là người tạo nhu cầu.</p>}
         </Trong>
       ) : (
         <ul className="ds-dong">

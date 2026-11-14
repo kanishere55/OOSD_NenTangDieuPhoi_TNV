@@ -55,8 +55,6 @@ small { font-size: .9rem; }
 .thanh-muc a:hover { background: var(--chinh-nhat); }
 .thanh-muc a.active { border-bottom-color: var(--chinh); color: var(--chinh-dam); font-weight: 700; }
 .so-viec { display: inline-block; min-width: 1.5em; padding: 0 6px; margin-left: 6px; border-radius: 999px; background: #b45309; color: #fff; font-size: .82rem; text-align: center; font-weight: 700; }
-.chan-trang { border-top: 1px solid var(--vien); color: var(--mo); font-size: .92rem; }
-.chan-trang div { max-width: 1040px; margin: 0 auto; padding: 14px 20px; }
 
 /* Nút và ô nhập */
 button, .nut {

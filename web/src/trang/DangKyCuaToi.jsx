@@ -54,7 +54,7 @@ export default function DangKyCuaToi() {
 
   return (
     <>
-      <DauTrang tieuDe="Đăng ký của tôi" moTa="Các ca bạn đã đăng ký, tình trạng của từng đăng ký và việc bạn cần làm tiếp.">
+      <DauTrang tieuDe="Đăng ký của tôi">
         <Link className="nut phu" to="/tim-ca">Tìm thêm ca</Link>
       </DauTrang>
       <ThongBao loi={tt.loi} thanhCong={tt.thanhCong} />
@@ -67,7 +67,6 @@ export default function DangKyCuaToi() {
       {canKhai.length > 0 && (
         <>
           <h2>Cần khai đóng góp</h2>
-          <p className="mo">Ca đã kết thúc. Hãy khai giờ bạn đã làm để điều phối viên xác nhận.</p>
           <ul className="ds-dong">{canKhai.map(dong)}</ul>
         </>
       )}

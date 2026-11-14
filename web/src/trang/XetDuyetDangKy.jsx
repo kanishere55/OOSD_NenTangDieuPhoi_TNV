@@ -113,7 +113,7 @@ export default function XetDuyetDangKy() {
         <HopXacNhan tieuDe="Hủy phân công người này?" nhanDongY="Hủy phân công" dangGui={tt.dangGui}
           onDongY={() => lam(hoi.d, 'huy-phan-cong', `Đã hủy phân công ${hoi.d.tenHienThi}. Ca có thêm một chỗ trống.`)} onThoi={() => setHoi(null)}>
           <p><strong>{hoi.d.tenHienThi}</strong> sẽ không còn chỗ trong ca và không xem được hướng dẫn riêng nữa. Chỗ này được trả lại cho ca.</p>
-          <p>Thao tác này không hoàn tác được. Hãy báo cho người đó biết nếu có thể.</p>
+          <p>Thao tác này không hoàn tác được.</p>
         </HopXacNhan>
       )}
     </>
