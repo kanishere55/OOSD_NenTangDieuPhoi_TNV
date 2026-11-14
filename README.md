@@ -155,7 +155,7 @@ Tên mỗi ca kiểm thử bắt đầu bằng mã KT trong Bảng 7.2 của bá
 
 - `docs/so_do/drawio`: tệp nguồn draw.io của các sơ đồ trong báo cáo, đặt tên theo số sơ đồ.
 - `docs/so_do/png`: ảnh xuất từ các tệp trên.
-- `docs/giao_dien/drawio`: bản thiết kế các màn hình M00 đến M14, vẽ bằng draw.io trước khi viết giao diện.
+- `docs/giao_dien/drawio`: bản thiết kế giao diện vẽ bằng draw.io, gồm sơ đồ chuyển màn hình, bố cục chung và bố cục các màn hình M00 đến M14.
 - `docs/giao_dien/png`: ảnh xuất từ các bản thiết kế, dùng trong Chương VI của báo cáo.
 - `docs/kiem_thu`: kết quả chạy kiểm thử.
 - `docs/man_hinh`: ảnh chụp giao diện đã hiện thực khi chạy luồng xuyên suốt KT20.
