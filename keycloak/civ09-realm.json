@@ -1,0 +1,178 @@
+{
+  "realm": "civ09",
+  "enabled": true,
+  "displayName": "CIV-09 Điều phối tình nguyện viên",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "loginWithEmailAllowed": false,
+  "clients": [
+    {
+      "clientId": "civ09-web",
+      "name": "Nền tảng điều phối tình nguyện viên",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:5173/*",
+        "http://127.0.0.1:5000/*",
+        "http://127.0.0.1:8088/*",
+        "http://localhost:5173/*",
+        "http://localhost:5000/*",
+        "http://localhost:8088/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5000",
+        "http://127.0.0.1:8088",
+        "http://localhost:5173",
+        "http://localhost:5000",
+        "http://localhost:8088"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://127.0.0.1:5173/*##http://127.0.0.1:5000/*##http://127.0.0.1:8088/*##http://localhost:5173/*##http://localhost:5000/*##http://localhost:8088/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000001",
+      "username": "daidien1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Mai",
+      "lastName": "Trần Thị",
+      "email": "daidien1@civ09.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000002",
+      "username": "dieuphoi1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Hùng",
+      "lastName": "Lê Văn",
+      "email": "dieuphoi1@civ09.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000003",
+      "username": "dieuphoi2",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Lan",
+      "lastName": "Phạm Ngọc",
+      "email": "dieuphoi2@civ09.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000004",
+      "username": "tnv1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Khoa",
+      "lastName": "Nguyễn Minh",
+      "email": "tnv1@civ09.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000005",
+      "username": "tnv2",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Hạnh",
+      "lastName": "Võ Thị",
+      "email": "tnv2@civ09.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000006",
+      "username": "tnv3",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bảo",
+      "lastName": "Đặng Quốc",
+      "email": "tnv3@civ09.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000007",
+      "username": "dieuphoi_tnv",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Huy",
+      "lastName": "Hoàng Gia",
+      "email": "dieuphoi_tnv@civ09.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "vi"
+  ],
+  "defaultLocale": "vi",
+  "localizationTexts": {
+    "vi": {
+      "loginAccountTitle": "Đăng nhập vào tài khoản",
+      "loginTitle": "Đăng nhập vào {0}",
+      "loginTitleHtml": "{0}",
+      "username": "Tên đăng nhập",
+      "usernameOrEmail": "Tên đăng nhập",
+      "password": "Mật khẩu",
+      "doLogIn": "Đăng nhập",
+      "showPassword": "Hiện mật khẩu",
+      "hidePassword": "Ẩn mật khẩu",
+      "invalidUserMessage": "Tên đăng nhập hoặc mật khẩu không đúng.",
+      "loginTimeout": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại."
+    }
+  }
+}

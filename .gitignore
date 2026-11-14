@@ -1,0 +1,25 @@
+# Bí mật và cấu hình cục bộ
+.env
+.env.*
+!.env.example
+appsettings.Development.local.json
+
+# .NET
+bin/
+obj/
+TestResults/
+*.user
+.vs/
+
+# Node / React
+node_modules/
+web/dist/
+src/Civ09.Api/wwwroot/
+
+# Hệ điều hành và Word
+.DS_Store
+Thumbs.db
+~$*
+
+# Tệp kết quả kiểm thử chi tiết có tên máy, chỉ giữ bản HTML và ảnh
+docs/kiem_thu/*.trx

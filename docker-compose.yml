@@ -1,0 +1,78 @@
+# Dựng các dịch vụ nền của CIV-09: SQL Server, khởi tạo CSDL và Keycloak.
+# Chạy:  docker compose up -d
+# Chạy cả ứng dụng trong Docker:  docker compose --profile app up -d --build
+name: civ09
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD}
+    ports:
+      - "127.0.0.1:${SQL_PORT:-14330}:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  # Tạo CSDL, bảng, view và dữ liệu mẫu nếu chưa có, rồi dừng.
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      SQL_SA_PASSWORD: ${SQL_SA_PASSWORD}
+      SQL_APP_PASSWORD: ${SQL_APP_PASSWORD}
+    volumes:
+      - ./database:/database:ro
+    entrypoint: ["/bin/bash", "/database/khoi_tao.sh"]
+    restart: "no"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HTTP_PORT: "8080"
+      KC_HOSTNAME: http://127.0.0.1:8080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      DEMO_PASSWORD: ${DEMO_PASSWORD}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+
+  # Máy chủ ứng dụng kèm giao diện React đã build (chỉ chạy khi dùng --profile app).
+  app:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_started
+    environment:
+      ASPNETCORE_URLS: http://+:8088
+      ConnectionStrings__CsdlChinh: Server=sqlserver,1433;Database=DieuPhoiTinhNguyenVien;User Id=civ09_app;Password=${SQL_APP_PASSWORD};TrustServerCertificate=True
+      Keycloak__Authority: http://127.0.0.1:8080/realms/civ09
+      Keycloak__MetadataAddress: http://keycloak:8080/realms/civ09/.well-known/openid-configuration
+      Keycloak__ClientSecret: ${KEYCLOAK_CLIENT_SECRET}
+    ports:
+      - "8088:8088"
+    volumes:
+      - appkeys:/root/.aspnet/DataProtection-Keys
+
+volumes:
+  sqldata:
+  appkeys:

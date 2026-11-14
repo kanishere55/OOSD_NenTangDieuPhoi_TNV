@@ -1,0 +1,8 @@
+**/bin
+**/obj
+**/node_modules
+**/TestResults
+src/Civ09.Api/wwwroot
+.env
+.git
+docs
