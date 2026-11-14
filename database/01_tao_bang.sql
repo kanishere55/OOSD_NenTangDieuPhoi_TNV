@@ -163,9 +163,12 @@ CREATE INDEX IX_DangKy_HoSo ON dbo.DangKyCaLam (MaHoSo);
 CREATE INDEX IX_NhuCau_ToChuc ON dbo.NhuCauCongDong (MaToChuc);
 GO
 CREATE VIEW dbo.CaCongKhai AS
-SELECT c.MaCaLam, n.TieuDe, n.TomTatCongKhai, n.KhuVucChung,
-       c.BatDauDuKien, c.KetThucDuKien, c.SoNguoiCan
+SELECT c.MaCaLam, t.TenToChuc, n.TieuDe, n.TomTatCongKhai, n.KhuVucChung,
+       c.BatDauDuKien, c.KetThucDuKien, c.SoNguoiCan,
+       (SELECT COUNT(*) FROM dbo.DangKyCaLam d
+        WHERE d.MaCaLam = c.MaCaLam AND d.TrangThai = 'DA_PHAN_CONG') AS SoDaPhanCong
 FROM dbo.CaLam c JOIN dbo.NhuCauCongDong n ON n.MaNhuCau = c.MaNhuCau
+JOIN dbo.ToChucCongDong t ON t.MaToChuc = n.MaToChuc
 WHERE n.TrangThai = 'CONG_BO' AND n.DaRaSoatCongKhai = 1
   AND c.TrangThai = 'MO' AND c.BatDauDuKien > SYSUTCDATETIME();
 GO

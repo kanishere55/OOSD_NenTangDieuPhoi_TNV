@@ -1,5 +1,6 @@
 -- Dữ liệu mẫu để chạy thử. Toàn bộ là dữ liệu giả, không có thông tin người thụ hưởng thật.
--- Tài khoản, tổ chức và danh mục kỹ năng được cấp sẵn (nền tảng không có chức năng quản trị).
+-- Tổ chức, đại diện, điều phối viên và danh mục kỹ năng được cấp sẵn (nền tảng không có chức năng quản trị).
+-- Tình nguyện viên mới có thể tự đăng ký; ba tài khoản tnv1, tnv2, tnv3 ở đây có sẵn để chạy thử.
 -- MaDinhDanhOIDC trùng với id người dùng trong keycloak/civ09-realm.json.
 SET NOCOUNT ON;
 
@@ -14,7 +15,9 @@ INSERT INTO dbo.KyNang (MaKyNang, TenKyNang, MoTaKyNang) VALUES
  ('KN-SO-CUU', N'Sơ cứu', N'Sơ cứu ban đầu các vết thương nhẹ'),
  ('KN-NAU-AN', N'Nấu ăn', N'Nấu ăn số lượng lớn cho bếp cộng đồng'),
  ('KN-DAY-KEM', N'Dạy kèm', N'Kèm học sinh tiểu học và trung học cơ sở'),
- ('KN-VAN-CHUYEN', N'Vận chuyển hàng', N'Bốc xếp, chở hàng cứu trợ bằng xe máy');
+ ('KN-VAN-CHUYEN', N'Vận chuyển hàng', N'Bốc xếp, chở hàng cứu trợ bằng xe máy'),
+ ('KN-LAO-DONG', N'Lao động phổ thông', N'Dọn dẹp, sắp xếp, làm các việc tay chân nhẹ'),
+ ('KN-TIENG-ANH', N'Tiếng Anh giao tiếp', N'Nghe nói tiếng Anh ở mức trò chuyện thông thường');
 
 -- Người dùng
 INSERT INTO dbo.NguoiDung (MaNguoiDung, MaDinhDanhOIDC, TenHienThi) VALUES

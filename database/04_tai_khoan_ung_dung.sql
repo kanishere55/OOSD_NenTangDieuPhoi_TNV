@@ -10,23 +10,26 @@ IF USER_ID(N'civ09_app') IS NULL
   CREATE USER civ09_app FOR LOGIN civ09_app;
 GO
 
--- Tài khoản, vai trò, tổ chức và danh mục kỹ năng do quản trị nạp sẵn: ứng dụng chỉ đọc.
-GRANT SELECT ON dbo.NguoiDung TO civ09_app;
-GRANT SELECT ON dbo.NguoiDungVaiTro TO civ09_app;
+-- Tổ chức, tư cách thành viên và danh mục kỹ năng được nạp sẵn: ứng dụng chỉ đọc.
 GRANT SELECT ON dbo.ToChucCongDong TO civ09_app;
 GRANT SELECT ON dbo.ThanhVienToChuc TO civ09_app;
 GRANT SELECT ON dbo.KyNang TO civ09_app;
 
+-- Người mới tự đăng ký được lập tài khoản, vai trò tình nguyện viên và hồ sơ ở lần đăng nhập đầu tiên,
+-- nên ứng dụng được thêm dòng vào ba bảng này. Ứng dụng không sửa, không xóa tài khoản và vai trò.
+GRANT SELECT, INSERT ON dbo.NguoiDung TO civ09_app;
+GRANT SELECT, INSERT ON dbo.NguoiDungVaiTro TO civ09_app;
+
 -- Hồ sơ chỉ cập nhật thời điểm khai kỹ năng; kỹ năng đã khai được thêm và bỏ.
-GRANT SELECT, UPDATE ON dbo.HoSoTinhNguyenVien TO civ09_app;
+GRANT SELECT, INSERT, UPDATE ON dbo.HoSoTinhNguyenVien TO civ09_app;
 GRANT SELECT, INSERT, DELETE ON dbo.KyNangSoHuu TO civ09_app;
 
 -- Nhu cầu, ca, đăng ký, đóng góp chỉ đổi trạng thái để giữ lịch sử nên không có quyền xóa.
--- Hướng dẫn riêng được xóa khi đại diện để trống nội dung.
+-- Hướng dẫn riêng được xóa khi đại diện để trống nội dung. Kỹ năng yêu cầu của ca được bỏ khi sửa ca (BR11).
 GRANT SELECT, INSERT, UPDATE ON dbo.NhuCauCongDong TO civ09_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.ThongTinDieuPhoiRieng TO civ09_app;
 GRANT SELECT, INSERT, UPDATE ON dbo.CaLam TO civ09_app;
-GRANT SELECT, INSERT ON dbo.YeuCauKyNang TO civ09_app;
+GRANT SELECT, INSERT, DELETE ON dbo.YeuCauKyNang TO civ09_app;
 GRANT SELECT, INSERT, UPDATE ON dbo.DangKyCaLam TO civ09_app;
 GRANT SELECT, INSERT, UPDATE ON dbo.DongGop TO civ09_app;
 
