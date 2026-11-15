@@ -19,10 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\database\01_tao_bang.sql" Link="database\01_tao_bang.sql" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\database\02_du_lieu_mau.sql" Link="database\02_du_lieu_mau.sql" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\database\03_thu_tuc_va_trigger.sql" Link="database\03_thu_tuc_va_trigger.sql" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\database\04_tai_khoan_ung_dung.sql" Link="database\04_tai_khoan_ung_dung.sql" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\..\sql\01_tao_bang.sql" Link="database\01_tao_bang.sql" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\..\sql\02_du_lieu_mau.sql" Link="database\02_du_lieu_mau.sql" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\..\sql\03_thu_tuc_va_trigger.sql" Link="database\03_thu_tuc_va_trigger.sql" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\..\sql\04_tai_khoan_ung_dung.sql" Link="database\04_tai_khoan_ung_dung.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

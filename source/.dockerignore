@@ -3,6 +3,3 @@
 **/node_modules
 **/TestResults
 backend/Civ09.Api/wwwroot
-.env
-.git
-docs

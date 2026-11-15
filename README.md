@@ -35,27 +35,28 @@ Nền tảng nối nhu cầu hỗ trợ của các tổ chức cộng đồng v�
 ## Cấu trúc thư mục
 
 ```
-CIV-09/
-├── backend/
-│   ├── Civ09.Api/        Máy chủ ứng dụng
-│   │   ├── GiaoDien/     Lớp Boundary (nhận yêu cầu từ giao diện)
-│   │   ├── DichVu/       Lớp Service (xử lý từng use case)
-│   │   ├── ThucThe/      Lớp thực thể
-│   │   ├── HoTro/        Kiểm tra quyền, điều kiện phân công, bản đồ, ảnh, mã điểm danh
-│   │   └── DuLieu/       Ánh xạ EF Core
-│   ├── Civ09.Tests/      Kiểm thử đơn vị và kiểm thử tích hợp
-│   └── Civ09.slnx
-├── frontend/             Giao diện React (23 màn hình, M00 đến M22)
-├── database/             Tệp lệnh SQL: bảng, view, thủ tục, trigger, tài khoản, dữ liệu mẫu
-├── keycloak/             Cấu hình realm và tài khoản mẫu
-├── docs/
-│   ├── so_do/            Sơ đồ trong báo cáo (drawio và png), đặt tên theo số sơ đồ
-│   ├── giao_dien/        Bản vẽ thiết kế màn hình (drawio và png)
-│   ├── man_hinh/         Ảnh chụp giao diện đang chạy
-│   └── kiem_thu/         Kết quả chạy kiểm thử
+OOSD_NenTangDieuPhoi_TNV/
+├── source/                  Mã nguồn
+│   ├── backend/
+│   │   ├── Civ09.Api/       Máy chủ ứng dụng
+│   │   │   ├── GiaoDien/    Lớp Boundary (nhận yêu cầu từ giao diện)
+│   │   │   ├── DichVu/      Lớp Service (xử lý từng use case)
+│   │   │   ├── ThucThe/     Lớp thực thể
+│   │   │   ├── HoTro/       Kiểm tra quyền, điều kiện phân công, bản đồ, ảnh, mã điểm danh
+│   │   │   └── DuLieu/      Ánh xạ EF Core
+│   │   ├── Civ09.Tests/     Kiểm thử đơn vị và kiểm thử tích hợp
+│   │   └── Civ09.slnx
+│   ├── frontend/            Giao diện React (23 màn hình, M00 đến M22)
+│   ├── keycloak/            Cấu hình realm và tài khoản mẫu
+│   └── Dockerfile
+├── sql/                     Tệp lệnh tạo CSDL: bảng, view, thủ tục, trigger, tài khoản, dữ liệu mẫu
+├── so_do/                   Sơ đồ trong báo cáo (drawio và png), đặt tên theo số sơ đồ
+├── hinh_anh/
+│   ├── giao_dien/           Bản vẽ thiết kế màn hình, Chương VI (drawio và png)
+│   ├── man_hinh/            Ảnh chụp giao diện, mục 7.2
+│   └── kiem_thu/            Kết quả chạy kiểm thử, Hình 7.1
 ├── docker-compose.yml
-├── Dockerfile
-└── .env.example          Mẫu tệp cấu hình, sao chép thành .env trước khi chạy
+└── .env.example             Mẫu tệp cấu hình, sao chép thành .env trước khi chạy
 ```
 
 Tên lớp và phương thức trong mã nguồn đặt theo Chương V của báo cáo.
@@ -65,8 +66,8 @@ Tên lớp và phương thức trong mã nguồn đặt theo Chương V của b�
 Cần có Docker Desktop và Git. Muốn chạy ở chế độ phát triển hoặc chạy kiểm thử thì cần thêm .NET SDK 10 và Node.js 22.
 
 ```powershell
-git clone https://github.com/kanishere55/CIV-09.git
-cd CIV-09
+git clone https://github.com/kanishere55/OOSD_NenTangDieuPhoi_TNV.git
+cd OOSD_NenTangDieuPhoi_TNV
 copy .env.example .env
 ```
 
@@ -84,8 +85,8 @@ Lần đầu mất vài phút để tải image và build. Sau đó mở http://
 
 ```powershell
 docker compose up -d                          # SQL Server, khởi tạo CSDL, Keycloak
-dotnet run --project backend/Civ09.Api        # máy chủ ứng dụng: http://127.0.0.1:5000
-cd frontend
+dotnet run --project source/backend/Civ09.Api # máy chủ ứng dụng: http://127.0.0.1:5000
+cd source/frontend
 npm install
 npm run dev                                   # giao diện: http://127.0.0.1:5173
 ```
@@ -93,7 +94,7 @@ npm run dev                                   # giao diện: http://127.0.0.1:51
 Lưu ý:
 
 - Dùng địa chỉ `127.0.0.1`, không dùng `localhost`, để khớp cấu hình đăng nhập của Keycloak.
-- Lần chạy đầu, dịch vụ `db-init` tạo CSDL `DieuPhoiTinhNguyenVien` từ các tệp trong `database/`. Muốn tạo lại từ đầu: `docker compose --profile app down -v` rồi dựng lại.
+- Lần chạy đầu, dịch vụ `db-init` tạo CSDL `DieuPhoiTinhNguyenVien` từ các tệp trong `sql/`. Muốn tạo lại từ đầu: `docker compose --profile app down -v` rồi dựng lại.
 - Bản đồ lấy dữ liệu từ OpenStreetMap nên máy cần có Internet.
 - Trang quản trị Keycloak: http://127.0.0.1:8080, tài khoản `admin`, mật khẩu là `KEYCLOAK_ADMIN_PASSWORD` trong `.env`.
 
@@ -114,7 +115,7 @@ Thử điểm danh: đăng nhập `dieuphoi1`, vào **Điều phối ca**, bấm
 
 ## Cơ sở dữ liệu
 
-| Tệp trong `database/` | Nội dung |
+| Tệp trong `sql/` | Nội dung |
 | --- | --- |
 | `00_tao_csdl.sql` | Tạo CSDL |
 | `01_tao_bang.sql` | 25 bảng, ràng buộc, chỉ mục và 3 view |
@@ -130,7 +131,7 @@ Toàn bộ dữ liệu nằm trong CSDL, kể cả ảnh, thông báo và nhật
 Cần SQL Server đang chạy (`docker compose up -d`). Bộ kiểm thử tự tạo CSDL riêng tên `DieuPhoiTinhNguyenVien_KiemThu` nên không ảnh hưởng dữ liệu đang dùng.
 
 ```powershell
-dotnet test backend/Civ09.slnx
+dotnet test source/backend/Civ09.slnx
 ```
 
-Có 65 ca kiểm thử (49 tích hợp, 16 đơn vị). Tên ca bắt đầu bằng mã TC trong Bảng 7.2 của báo cáo; ba ca đơn vị viết thêm bắt đầu bằng mã quy tắc (BR). Kết quả lần chạy gần nhất nằm ở `docs/kiem_thu`.
+Có 65 ca kiểm thử (49 tích hợp, 16 đơn vị). Tên ca bắt đầu bằng mã TC trong Bảng 7.2 của báo cáo; ba ca đơn vị viết thêm bắt đầu bằng mã quy tắc (BR). Kết quả lần chạy gần nhất nằm ở `hinh_anh/kiem_thu`.

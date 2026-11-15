@@ -13,8 +13,8 @@ TestResults/
 
 # Node / React
 node_modules/
-frontend/dist/
-backend/Civ09.Api/wwwroot/
+source/frontend/dist/
+source/backend/Civ09.Api/wwwroot/
 
 # Hệ điều hành và Word
 .DS_Store
@@ -22,4 +22,4 @@ Thumbs.db
 ~$*
 
 # Tệp kết quả kiểm thử chi tiết có tên máy, chỉ giữ bản HTML và ảnh
-docs/kiem_thu/*.trx
+hinh_anh/kiem_thu/*.trx

@@ -31,7 +31,7 @@ services:
       SQL_SA_PASSWORD: ${SQL_SA_PASSWORD}
       SQL_APP_PASSWORD: ${SQL_APP_PASSWORD}
     volumes:
-      - ./database:/database:ro
+      - ./sql:/database:ro
     entrypoint: ["/bin/bash", "/database/khoi_tao.sh"]
     restart: "no"
 
@@ -49,13 +49,13 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./keycloak:/opt/keycloak/data/import:ro
+      - ./source/keycloak:/opt/keycloak/data/import:ro
 
   # Máy chủ ứng dụng kèm giao diện React đã build (chỉ chạy khi dùng --profile app).
   app:
     profiles: ["app"]
     build:
-      context: .
+      context: ./source
       dockerfile: Dockerfile
     depends_on:
       db-init:
