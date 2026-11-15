@@ -49,13 +49,13 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./source/keycloak:/opt/keycloak/data/import:ro
+      - ./CIV-09/keycloak:/opt/keycloak/data/import:ro
 
   # Máy chủ ứng dụng kèm giao diện React đã build (chỉ chạy khi dùng --profile app).
   app:
     profiles: ["app"]
     build:
-      context: ./source
+      context: ./CIV-09
       dockerfile: Dockerfile
     depends_on:
       db-init:

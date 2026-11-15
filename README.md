@@ -36,7 +36,7 @@ Nền tảng nối nhu cầu hỗ trợ của các tổ chức cộng đồng v�
 
 ```
 OOSD_NenTangDieuPhoi_TNV/
-├── source/                  Mã nguồn
+├── CIV-09/                  Mã nguồn
 │   ├── backend/
 │   │   ├── Civ09.Api/       Máy chủ ứng dụng
 │   │   │   ├── GiaoDien/    Lớp Boundary (nhận yêu cầu từ giao diện)
@@ -55,6 +55,7 @@ OOSD_NenTangDieuPhoi_TNV/
 │   ├── giao_dien/           Bản vẽ thiết kế màn hình, Chương VI (drawio và png)
 │   ├── man_hinh/            Ảnh chụp giao diện, mục 7.2
 │   └── kiem_thu/            Kết quả chạy kiểm thử, Hình 7.1
+├── bao_cao/                 Báo cáo cuối kỳ (Word)
 ├── docker-compose.yml
 └── .env.example             Mẫu tệp cấu hình, sao chép thành .env trước khi chạy
 ```
@@ -85,8 +86,8 @@ Lần đầu mất vài phút để tải image và build. Sau đó mở http://
 
 ```powershell
 docker compose up -d                          # SQL Server, khởi tạo CSDL, Keycloak
-dotnet run --project source/backend/Civ09.Api # máy chủ ứng dụng: http://127.0.0.1:5000
-cd source/frontend
+dotnet run --project CIV-09/backend/Civ09.Api # máy chủ ứng dụng: http://127.0.0.1:5000
+cd CIV-09/frontend
 npm install
 npm run dev                                   # giao diện: http://127.0.0.1:5173
 ```
@@ -131,7 +132,7 @@ Toàn bộ dữ liệu nằm trong CSDL, kể cả ảnh, thông báo và nhật
 Cần SQL Server đang chạy (`docker compose up -d`). Bộ kiểm thử tự tạo CSDL riêng tên `DieuPhoiTinhNguyenVien_KiemThu` nên không ảnh hưởng dữ liệu đang dùng.
 
 ```powershell
-dotnet test source/backend/Civ09.slnx
+dotnet test CIV-09/backend/Civ09.slnx
 ```
 
 Có 65 ca kiểm thử (49 tích hợp, 16 đơn vị). Tên ca bắt đầu bằng mã TC trong Bảng 7.2 của báo cáo; ba ca đơn vị viết thêm bắt đầu bằng mã quy tắc (BR). Kết quả lần chạy gần nhất nằm ở `hinh_anh/kiem_thu`.
