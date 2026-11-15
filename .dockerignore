@@ -2,7 +2,7 @@
 **/obj
 **/node_modules
 **/TestResults
-src/Civ09.Api/wwwroot
+backend/Civ09.Api/wwwroot
 .env
 .git
 docs

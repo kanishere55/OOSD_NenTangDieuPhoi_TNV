@@ -13,8 +13,8 @@ TestResults/
 
 # Node / React
 node_modules/
-web/dist/
-src/Civ09.Api/wwwroot/
+frontend/dist/
+backend/Civ09.Api/wwwroot/
 
 # Hệ điều hành và Word
 .DS_Store
