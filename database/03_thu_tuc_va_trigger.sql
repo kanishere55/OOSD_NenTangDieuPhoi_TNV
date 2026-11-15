@@ -20,6 +20,15 @@
 --   50131  BR13  bản khai không thuộc đăng ký đã phân công hoặc ngoài khung giờ của ca
 --   50141  BR14  người duyệt tự xác nhận bản khai của mình
 --   50142  BR14  sửa bản khai đã xác nhận
+--   50132  BR13  khai đóng góp cho đăng ký đã bị ghi vắng mặt
+--   50181  BR18  yêu cầu xác minh với kỹ năng không cần chứng chỉ
+--   50182  BR18  hạ cấp độ kỹ năng dưới mức ca đã phân công đang cần
+--   50191  BR19  người xác minh tự xác minh chứng chỉ của mình
+--   50211  BR22  nhu cầu có quá 5 ảnh
+--   50221  BR23  điểm danh cho đăng ký chưa phân công hoặc ngoài khung giờ cho phép
+--   50231  BR24  bản khai có quá 5 ảnh minh chứng
+--   50261  BR26  sửa hoặc xóa nhật ký truy cập
+--   50281  BR28  tạo nhu cầu cho tổ chức không còn hoạt động
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
@@ -114,12 +123,18 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM @MoiPhanCong)
     RETURN;
 
+  -- BR18: có kỹ năng, cấp độ không thấp hơn yêu cầu, đã xác minh nếu ca yêu cầu.
   IF EXISTS (
     SELECT 1
     FROM @MoiPhanCong AS m
     JOIN dbo.YeuCauKyNang AS y ON y.MaCaLam = m.MaCaLam
     WHERE NOT EXISTS (SELECT 1 FROM dbo.KyNangSoHuu AS s
-                      WHERE s.MaHoSo = m.MaHoSo AND s.MaKyNang = y.MaKyNang))
+                      WHERE s.MaHoSo = m.MaHoSo AND s.MaKyNang = y.MaKyNang
+                        AND s.CapDo >= y.CapDoToiThieu
+                        AND (y.CanXacMinh = 0 OR EXISTS (
+                              SELECT 1 FROM dbo.ChungChiKyNang AS cc
+                              WHERE cc.MaHoSo = m.MaHoSo AND cc.MaKyNang = y.MaKyNang
+                                AND cc.TrangThai = 'DA_XAC_MINH'))))
     THROW 50091, N'Tình nguyện viên chưa có đủ kỹ năng mà ca yêu cầu.', 1;
 
   IF EXISTS (
@@ -170,6 +185,13 @@ BEGIN
   IF EXISTS (
     SELECT 1
     FROM inserted AS i
+    JOIN dbo.DiemDanh AS dd ON dd.MaDangKy = i.MaDangKy
+    WHERE dd.KetQua = 'VANG_MAT')
+    THROW 50132, N'Đăng ký đã được ghi nhận vắng mặt nên không khai đóng góp được.', 1;
+
+  IF EXISTS (
+    SELECT 1
+    FROM inserted AS i
     JOIN dbo.DangKyCaLam AS d ON d.MaDangKy = i.MaDangKy
     JOIN dbo.HoSoTinhNguyenVien AS h ON h.MaHoSo = d.MaHoSo
     WHERE i.MaNguoiXacNhan = h.MaNguoiDung)
@@ -212,6 +234,131 @@ BEGIN
     WHERE NOT EXISTS (SELECT 1 FROM dbo.KyNangSoHuu AS s
                       WHERE s.MaHoSo = x.MaHoSo AND s.MaKyNang = x.MaKyNang))
     THROW 50031, N'Không được bỏ kỹ năng đang cần cho ca đã được phân công và chưa kết thúc.', 1;
+
+  -- BR18: không hạ cấp độ dưới mức mà ca đã phân công, chưa kết thúc đang cần.
+  IF EXISTS (
+    SELECT 1
+    FROM inserted AS i
+    JOIN dbo.DangKyCaLam AS d ON d.MaHoSo = i.MaHoSo AND d.TrangThai = 'DA_PHAN_CONG'
+    JOIN dbo.CaLam AS c ON c.MaCaLam = d.MaCaLam AND c.TrangThai IN ('MO', 'DANG_DIEN_RA')
+    JOIN dbo.YeuCauKyNang AS y ON y.MaCaLam = c.MaCaLam AND y.MaKyNang = i.MaKyNang
+    WHERE i.CapDo < y.CapDoToiThieu)
+    THROW 50182, N'Không được hạ cấp độ kỹ năng dưới mức mà ca đã được phân công đang cần.', 1;
+END;
+GO
+
+-- BR18: chỉ yêu cầu đã xác minh với kỹ năng cần chứng chỉ.
+CREATE OR ALTER TRIGGER dbo.trg_YeuCauKyNang_KiemTraXacMinh
+ON dbo.YeuCauKyNang
+AFTER INSERT, UPDATE
+AS
+BEGIN
+  IF @@ROWCOUNT = 0 RETURN;
+  SET NOCOUNT ON;
+
+  IF EXISTS (
+    SELECT 1 FROM inserted AS i JOIN dbo.KyNang AS k ON k.MaKyNang = i.MaKyNang
+    WHERE i.CanXacMinh = 1 AND k.CanChungChi = 0)
+    THROW 50181, N'Chỉ yêu cầu đã xác minh với kỹ năng cần chứng chỉ.', 1;
+END;
+GO
+
+-- BR19: người xác minh không phải chủ của chứng chỉ.
+CREATE OR ALTER TRIGGER dbo.trg_ChungChiKyNang_KiemTra
+ON dbo.ChungChiKyNang
+AFTER INSERT, UPDATE
+AS
+BEGIN
+  IF @@ROWCOUNT = 0 RETURN;
+  SET NOCOUNT ON;
+
+  IF EXISTS (
+    SELECT 1 FROM inserted AS i JOIN dbo.HoSoTinhNguyenVien AS h ON h.MaHoSo = i.MaHoSo
+    WHERE i.MaNguoiXacMinh = h.MaNguoiDung)
+    THROW 50191, N'Không được tự xác minh chứng chỉ của mình.', 1;
+END;
+GO
+
+-- BR22: mỗi nhu cầu có tối đa 5 ảnh.
+CREATE OR ALTER TRIGGER dbo.trg_AnhNhuCau_GioiHan
+ON dbo.AnhNhuCau
+AFTER INSERT
+AS
+BEGIN
+  IF @@ROWCOUNT = 0 RETURN;
+  SET NOCOUNT ON;
+
+  IF EXISTS (
+    SELECT 1 FROM (SELECT DISTINCT MaNhuCau FROM inserted) AS i
+    WHERE (SELECT COUNT(*) FROM dbo.AnhNhuCau AS a WHERE a.MaNhuCau = i.MaNhuCau) > 5)
+    THROW 50211, N'Mỗi nhu cầu có tối đa 5 ảnh.', 1;
+END;
+GO
+
+-- BR24: mỗi bản khai có tối đa 5 ảnh minh chứng.
+CREATE OR ALTER TRIGGER dbo.trg_AnhMinhChung_GioiHan
+ON dbo.AnhMinhChung
+AFTER INSERT
+AS
+BEGIN
+  IF @@ROWCOUNT = 0 RETURN;
+  SET NOCOUNT ON;
+
+  IF EXISTS (
+    SELECT 1 FROM (SELECT DISTINCT MaDongGop FROM inserted) AS i
+    WHERE (SELECT COUNT(*) FROM dbo.AnhMinhChung AS a WHERE a.MaDongGop = i.MaDongGop) > 5)
+    THROW 50231, N'Mỗi bản khai có tối đa 5 ảnh minh chứng.', 1;
+END;
+GO
+
+-- BR23: chỉ điểm danh đăng ký đã phân công; giờ vào từ 30 phút trước giờ bắt đầu đến giờ kết thúc,
+-- giờ ra chậm nhất 2 giờ sau giờ kết thúc.
+CREATE OR ALTER TRIGGER dbo.trg_DiemDanh_KiemTra
+ON dbo.DiemDanh
+AFTER INSERT, UPDATE
+AS
+BEGIN
+  IF @@ROWCOUNT = 0 RETURN;
+  SET NOCOUNT ON;
+
+  IF EXISTS (
+    SELECT 1
+    FROM inserted AS i
+    JOIN dbo.DangKyCaLam AS d ON d.MaDangKy = i.MaDangKy
+    JOIN dbo.CaLam AS c ON c.MaCaLam = d.MaCaLam
+    WHERE d.TrangThai <> 'DA_PHAN_CONG'
+       OR c.TrangThai = 'DA_HUY'
+       OR i.GioVao < DATEADD(minute, -30, c.BatDauDuKien)
+       OR i.GioVao > c.KetThucDuKien
+       OR i.GioRa > DATEADD(hour, 2, c.KetThucDuKien))
+    THROW 50221, N'Chỉ điểm danh người đã được phân công và trong khung giờ cho phép của ca.', 1;
+END;
+GO
+
+-- BR26: nhật ký truy cập chỉ được thêm, không sửa, không xóa.
+CREATE OR ALTER TRIGGER dbo.trg_NhatKyTruyCap_ChiThem
+ON dbo.NhatKyTruyCap
+INSTEAD OF UPDATE, DELETE
+AS
+BEGIN
+  SET NOCOUNT ON;
+  THROW 50261, N'Nhật ký truy cập không được sửa hoặc xóa.', 1;
+END;
+GO
+
+-- BR28: chỉ tổ chức đang hoạt động mới tạo nhu cầu.
+CREATE OR ALTER TRIGGER dbo.trg_NhuCauCongDong_ToChucHoatDong
+ON dbo.NhuCauCongDong
+AFTER INSERT
+AS
+BEGIN
+  IF @@ROWCOUNT = 0 RETURN;
+  SET NOCOUNT ON;
+
+  IF EXISTS (
+    SELECT 1 FROM inserted AS i JOIN dbo.ToChucCongDong AS t ON t.MaToChuc = i.MaToChuc
+    WHERE t.TrangThai <> 'HOAT_DONG')
+    THROW 50281, N'Tổ chức chưa được duyệt hoặc đã ngừng hoạt động nên chưa tạo được nhu cầu.', 1;
 END;
 GO
 
@@ -241,6 +388,17 @@ BEGIN
     WHERE TrangThai = 'MO' AND BatDauDuKien <= @BayGio;
     SET @SoCaBatDau = @@ROWCOUNT;
 
+    -- BR25: báo cho người có đăng ký chờ duyệt bị hủy vì ca đã bắt đầu.
+    INSERT INTO dbo.ThongBao (MaNguoiNhan, Loai, NoiDung, DuongDan, MaThamChieu, NgayTao)
+    SELECT h.MaNguoiDung, 'DANG_KY_BI_HUY',
+           LEFT(N'Ca "' + n.TieuDe + N'" đã bắt đầu nên đăng ký đang chờ duyệt của bạn không còn hiệu lực.', 500),
+           N'/dang-ky-cua-toi', d.MaDangKy, @BayGio
+    FROM dbo.DangKyCaLam AS d
+    JOIN dbo.CaLam AS c ON c.MaCaLam = d.MaCaLam
+    JOIN dbo.NhuCauCongDong AS n ON n.MaNhuCau = c.MaNhuCau
+    JOIN dbo.HoSoTinhNguyenVien AS h ON h.MaHoSo = d.MaHoSo
+    WHERE d.TrangThai = 'CHO_DUYET' AND c.TrangThai = 'DANG_DIEN_RA';
+
     UPDATE d
     SET TrangThai = 'DA_HUY'
     FROM dbo.DangKyCaLam AS d
@@ -264,30 +422,67 @@ BEGIN
 END;
 GO
 
--- BR04, BR09: danh sách người đăng ký một ca kèm gợi ý cho điều phối viên:
--- có đủ kỹ năng của ca không, có trùng lịch với ca đã được phân công không.
--- Thủ tục chỉ gắn nhãn, điều phối viên vẫn là người quyết định.
+-- BR04, BR09, BR18, BR20, BR27: danh sách người đăng ký một ca kèm các thông tin để điều phối viên chọn người:
+-- đủ kỹ năng (có xét cấp độ và xác minh), còn thiếu xác minh, trùng lịch, buổi bắt đầu ca có nằm trong
+-- lịch rảnh không, vị trí để tính khoảng cách, số lần có mặt và vắng mặt đã ghi nhận.
+-- Thủ tục chỉ cung cấp thông tin, điều phối viên vẫn là người quyết định.
 CREATE OR ALTER PROCEDURE dbo.sp_GoiYUngVien
   @MaCaLam varchar(36)
 AS
 BEGIN
   SET NOCOUNT ON;
 
+  -- Thứ (1 là thứ hai) và buổi của giờ bắt đầu ca theo giờ Việt Nam (UTC+7). Ngày 01/01/1900 là thứ hai.
+  DECLARE @BatDauVn datetime2(0) = (SELECT DATEADD(hour, 7, BatDauDuKien) FROM dbo.CaLam WHERE MaCaLam = @MaCaLam);
+  DECLARE @Thu tinyint = DATEDIFF(day, '19000101', @BatDauVn) % 7 + 1;
+  DECLARE @Buoi varchar(5) = CASE WHEN DATEPART(hour, @BatDauVn) < 12 THEN 'SANG'
+                                  WHEN DATEPART(hour, @BatDauVn) < 18 THEN 'CHIEU' ELSE 'TOI' END;
+
   SELECT
     d.MaDangKy,
+    d.MaHoSo,
     n.TenHienThi,
     d.TrangThai,
     d.NgayDangKy,
-    ISNULL((SELECT STRING_AGG(k.TenKyNang, N'; ') WITHIN GROUP (ORDER BY k.TenKyNang)
-            FROM dbo.KyNangSoHuu AS s
-            JOIN dbo.KyNang AS k ON k.MaKyNang = s.MaKyNang
-            WHERE s.MaHoSo = d.MaHoSo), N'') AS KyNangDaKhai,
+    -- Ví dụ: "Sơ cứu (khá, đã xác minh); Tin học cơ bản (cơ bản)".
+    ISNULL((SELECT STRING_AGG(x.MoTa, N'; ') WITHIN GROUP (ORDER BY x.TenKyNang)
+            FROM (SELECT k.TenKyNang,
+                         k.TenKyNang + N' (' +
+                         CASE s.CapDo WHEN 1 THEN N'cơ bản' WHEN 2 THEN N'khá' ELSE N'thành thạo' END +
+                         CASE WHEN EXISTS (SELECT 1 FROM dbo.ChungChiKyNang AS cc
+                                           WHERE cc.MaHoSo = s.MaHoSo AND cc.MaKyNang = s.MaKyNang
+                                             AND cc.TrangThai = 'DA_XAC_MINH') THEN N', đã xác minh' ELSE N'' END + N')' AS MoTa
+                  FROM dbo.KyNangSoHuu AS s
+                  JOIN dbo.KyNang AS k ON k.MaKyNang = s.MaKyNang
+                  WHERE s.MaHoSo = d.MaHoSo) AS x), N'') AS KyNangDaKhai,
     CAST(CASE WHEN EXISTS (
            SELECT 1 FROM dbo.YeuCauKyNang AS y
            WHERE y.MaCaLam = d.MaCaLam
              AND NOT EXISTS (SELECT 1 FROM dbo.KyNangSoHuu AS s
-                             WHERE s.MaHoSo = d.MaHoSo AND s.MaKyNang = y.MaKyNang))
+                             WHERE s.MaHoSo = d.MaHoSo AND s.MaKyNang = y.MaKyNang
+                               AND s.CapDo >= y.CapDoToiThieu
+                               AND (y.CanXacMinh = 0 OR EXISTS (
+                                     SELECT 1 FROM dbo.ChungChiKyNang AS cc
+                                     WHERE cc.MaHoSo = d.MaHoSo AND cc.MaKyNang = y.MaKyNang
+                                       AND cc.TrangThai = 'DA_XAC_MINH'))))
          THEN 0 ELSE 1 END AS bit) AS DuKyNang,
+    -- Có kỹ năng và đủ cấp độ nhưng chứng chỉ chưa được xác minh.
+    CAST(CASE WHEN EXISTS (
+           SELECT 1 FROM dbo.YeuCauKyNang AS y
+           JOIN dbo.KyNangSoHuu AS s ON s.MaHoSo = d.MaHoSo AND s.MaKyNang = y.MaKyNang AND s.CapDo >= y.CapDoToiThieu
+           WHERE y.MaCaLam = d.MaCaLam AND y.CanXacMinh = 1
+             AND NOT EXISTS (SELECT 1 FROM dbo.ChungChiKyNang AS cc
+                             WHERE cc.MaHoSo = d.MaHoSo AND cc.MaKyNang = y.MaKyNang AND cc.TrangThai = 'DA_XAC_MINH'))
+         THEN 1 ELSE 0 END AS bit) AS ThieuXacMinh,
+    -- Số kỹ năng cần chứng chỉ của ca mà người này đã được xác minh.
+    (SELECT COUNT(*) FROM dbo.YeuCauKyNang AS y
+     JOIN dbo.KyNang AS k ON k.MaKyNang = y.MaKyNang AND k.CanChungChi = 1
+     WHERE y.MaCaLam = d.MaCaLam
+       AND EXISTS (SELECT 1 FROM dbo.ChungChiKyNang AS cc
+                   WHERE cc.MaHoSo = d.MaHoSo AND cc.MaKyNang = y.MaKyNang AND cc.TrangThai = 'DA_XAC_MINH')) AS SoKyNangDaXacMinh,
+    (SELECT COUNT(*) FROM dbo.YeuCauKyNang AS y
+     JOIN dbo.KyNang AS k ON k.MaKyNang = y.MaKyNang AND k.CanChungChi = 1
+     WHERE y.MaCaLam = d.MaCaLam) AS SoKyNangCanChungChi,
     CAST(CASE WHEN EXISTS (
            SELECT 1
            FROM dbo.DangKyCaLam AS d2
@@ -295,11 +490,20 @@ BEGIN
            WHERE d2.MaHoSo = d.MaHoSo AND d2.MaDangKy <> d.MaDangKy
              AND d2.TrangThai = 'DA_PHAN_CONG' AND c2.TrangThai <> 'DA_HUY'
              AND c2.BatDauDuKien < c.KetThucDuKien AND c.BatDauDuKien < c2.KetThucDuKien)
-         THEN 1 ELSE 0 END AS bit) AS TrungLich
+         THEN 1 ELSE 0 END AS bit) AS TrungLich,
+    -- NULL khi người này chưa khai lịch rảnh.
+    CAST(CASE WHEN NOT EXISTS (SELECT 1 FROM dbo.LichRanh AS l WHERE l.MaHoSo = d.MaHoSo) THEN NULL
+              WHEN EXISTS (SELECT 1 FROM dbo.LichRanh AS l WHERE l.MaHoSo = d.MaHoSo AND l.Thu = @Thu AND l.Buoi = @Buoi) THEN 1
+              ELSE 0 END AS bit) AS KhopLichRanh,
+    h.ViDo,
+    h.KinhDo,
+    ISNULL(m.SoLanCoMat, 0) AS SoLanCoMat,
+    ISNULL(m.SoLanVang, 0) AS SoLanVang
   FROM dbo.DangKyCaLam AS d
   JOIN dbo.CaLam AS c ON c.MaCaLam = d.MaCaLam
   JOIN dbo.HoSoTinhNguyenVien AS h ON h.MaHoSo = d.MaHoSo
   JOIN dbo.NguoiDung AS n ON n.MaNguoiDung = h.MaNguoiDung
+  LEFT JOIN dbo.MucTinCay AS m ON m.MaHoSo = d.MaHoSo
   WHERE d.MaCaLam = @MaCaLam
   ORDER BY d.NgayDangKy, d.MaDangKy;
 END;
@@ -318,5 +522,72 @@ BEGIN
     ISNULL(SUM(SoGiay), 0) AS TongSoGiay
   FROM dbo.DongGopDaXacNhan
   WHERE MaHoSo = @MaHoSo;
+END;
+GO
+
+-- BR25: nhắc tình nguyện viên trước ca 24 giờ. Mỗi đăng ký chỉ nhắc một lần (chỉ mục UQ_ThongBao_NhacCa).
+-- Tác vụ nền gọi định kỳ cùng lúc với sp_ChuyenMocThoiGianCa.
+CREATE OR ALTER PROCEDURE dbo.sp_TaoNhacTruocCa
+  @BayGio datetime2(0)
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  INSERT INTO dbo.ThongBao (MaNguoiNhan, Loai, NoiDung, DuongDan, MaThamChieu, NgayTao)
+  SELECT h.MaNguoiDung, 'NHAC_CA',
+         LEFT(N'Nhắc lịch: ca "' + n.TieuDe + N'" bắt đầu lúc ' +
+              FORMAT(DATEADD(hour, 7, c.BatDauDuKien), 'HH:mm dd/MM/yyyy') + N'. Xem hướng dẫn riêng trước khi đi.', 500),
+         N'/ca/' + c.MaCaLam + N'/huong-dan-rieng', d.MaDangKy, @BayGio
+  FROM dbo.DangKyCaLam AS d
+  JOIN dbo.CaLam AS c ON c.MaCaLam = d.MaCaLam
+  JOIN dbo.NhuCauCongDong AS n ON n.MaNhuCau = c.MaNhuCau
+  JOIN dbo.HoSoTinhNguyenVien AS h ON h.MaHoSo = d.MaHoSo
+  WHERE d.TrangThai = 'DA_PHAN_CONG' AND c.TrangThai = 'MO'
+    AND c.BatDauDuKien > @BayGio AND c.BatDauDuKien <= DATEADD(hour, 24, @BayGio)
+    AND NOT EXISTS (SELECT 1 FROM dbo.ThongBao AS t
+                    WHERE t.MaNguoiNhan = h.MaNguoiDung AND t.Loai = 'NHAC_CA' AND t.MaThamChieu = d.MaDangKy);
+
+  SELECT @@ROWCOUNT AS SoNhacMoi;
+END;
+GO
+
+-- Thống kê kỹ năng đang thiếu của một tổ chức: với các ca đang mở, chưa bắt đầu và còn thiếu người,
+-- mỗi kỹ năng cần cho bao nhiêu ca, thiếu bao nhiêu chỗ, có bao nhiêu đăng ký chờ duyệt
+-- và trên nền tảng có bao nhiêu tình nguyện viên đang hoạt động có kỹ năng đó.
+CREATE OR ALTER PROCEDURE dbo.sp_ThongKeKyNangThieu
+  @MaToChuc varchar(36),
+  @BayGio datetime2(0)
+AS
+BEGIN
+  SET NOCOUNT ON;
+
+  WITH DemDangKy AS (
+    SELECT c.MaCaLam, c.SoNguoiCan,
+           SUM(CASE WHEN d.TrangThai = 'DA_PHAN_CONG' THEN 1 ELSE 0 END) AS SoDaPhanCong,
+           SUM(CASE WHEN d.TrangThai = 'CHO_DUYET' THEN 1 ELSE 0 END) AS SoChoDuyet
+    FROM dbo.CaLam AS c
+    JOIN dbo.NhuCauCongDong AS n ON n.MaNhuCau = c.MaNhuCau
+    LEFT JOIN dbo.DangKyCaLam AS d ON d.MaCaLam = c.MaCaLam
+    WHERE n.MaToChuc = @MaToChuc AND n.TrangThai = 'CONG_BO'
+      AND c.TrangThai = 'MO' AND c.BatDauDuKien > @BayGio
+    GROUP BY c.MaCaLam, c.SoNguoiCan
+  ),
+  CaThieu AS (
+    SELECT MaCaLam, SoNguoiCan - SoDaPhanCong AS SoThieu, SoChoDuyet FROM DemDangKy
+  )
+  SELECT k.MaKyNang, k.TenKyNang,
+         COUNT(*) AS SoCa,
+         SUM(ct.SoThieu) AS SoChoThieu,
+         SUM(ct.SoChoDuyet) AS SoDangKyChoDuyet,
+         (SELECT COUNT(*) FROM dbo.KyNangSoHuu AS s
+          JOIN dbo.HoSoTinhNguyenVien AS h ON h.MaHoSo = s.MaHoSo
+          JOIN dbo.NguoiDung AS u ON u.MaNguoiDung = h.MaNguoiDung AND u.DangHoatDong = 1
+          WHERE s.MaKyNang = k.MaKyNang) AS SoTinhNguyenVienCoKyNang
+  FROM CaThieu AS ct
+  JOIN dbo.YeuCauKyNang AS y ON y.MaCaLam = ct.MaCaLam
+  JOIN dbo.KyNang AS k ON k.MaKyNang = y.MaKyNang
+  WHERE ct.SoThieu > 0
+  GROUP BY k.MaKyNang, k.TenKyNang
+  ORDER BY SUM(ct.SoThieu) DESC, k.TenKyNang;
 END;
 GO

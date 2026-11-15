@@ -153,6 +153,22 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000008",
+      "username": "quantri1",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Quân",
+      "lastName": "Đỗ Minh",
+      "email": "quantri1@civ09.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
     }
   ],
   "internationalizationEnabled": true,
